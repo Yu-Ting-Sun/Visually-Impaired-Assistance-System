@@ -12,7 +12,7 @@
 #include "Model.hpp"
 
 #define YOLOV8_OD_INPUT_TENSOR	(192)	//256,224,192
-#define YOLOV8N_OD_CLASS		(80)	//coco dataset
+#define YOLOV8N_OD_CLASS		(50)	// indoor_common_50 dataset
 
 namespace arm
 {

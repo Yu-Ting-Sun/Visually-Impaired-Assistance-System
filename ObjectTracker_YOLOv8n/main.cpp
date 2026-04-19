@@ -8,6 +8,10 @@
  ******************************************************************************/
 #include <cstdint>
 #include <cstring>
+#include <algorithm>
+#include <cstdio>
+#include <string>
+#include <vector>
 
 #define FDOWNSAMPLE_W 80
 #define FDOWNSAMPLE_H 60
@@ -30,16 +34,13 @@ static uint8_t g_unknown_active[ZONE_COUNT] = {0, 0, 0};
 static uint8_t g_unknown_enter_streak[ZONE_COUNT] = {0, 0, 0};
 static uint8_t g_unknown_exit_streak[ZONE_COUNT] = {0, 0, 0};
 static uint32_t g_unknown_last_print_frame[ZONE_COUNT] = {0, 0, 0};
-static int g_known_best_severity = -1;
-static int g_known_best_direction = 1;
-static float g_known_best_area_ratio = 0.0f;
-
 #include "BoardInit.hpp"      /* Board initialisation */
 
 #include "BufAttributes.hpp" /* Buffer attributes to be applied */
 #include "YOLOv8nODModel.hpp"       /* Model API */
 #include "YOLOv8nODPostProcessing.hpp"
 #include "Labels.hpp"
+#include "WarningLogic.hpp"
 
 #include "imlib.h"          /* Image processing */
 #include "framebuffer.h"
@@ -82,6 +83,7 @@ static float g_known_best_area_ratio = 0.0f;
 #define MODEL_AT_HYPERRAM_ADDR (0x82400000)
 
 #define OD_PRESENCE_THRESHOLD  				(0.5)
+#define ENABLE_UNKNOWN_EXPERIMENT           (0)
 
 typedef enum
 {
@@ -241,114 +243,216 @@ static inline uint8_t RGB565ToGray(uint16_t pixel)
     return (uint8_t)((77 * r8 + 150 * g8 + 29 * b8) >> 8);
 }
 
-static inline int GetDirectionIndex(float bbox_center_x, float img_w)
+static constexpr arm::app::warning::DebugViewMode kDebugViewMode =
+    arm::app::warning::DebugViewMode::RawWithTracks;
+static arm::app::warning::WarningEvent g_last_warning_event;
+
+static const char *GetSafeLabel(const std::vector<std::string> &labels, int classId)
 {
-    if (bbox_center_x < img_w * 0.33f)
-        return 0;
-    if (bbox_center_x < img_w * 0.66f)
-        return 1;
-    return 2;
+    if (classId >= 0 && classId < static_cast<int>(labels.size()))
+    {
+        return labels[classId].c_str();
+    }
+
+    return "unknown";
 }
 
-static inline int GetDangerSeverity(float bbox_area_ratio)
-{
-    if (bbox_area_ratio > 0.15f)
-        return 2; // DANGER
-    if (bbox_area_ratio > 0.05f)
-        return 1; // CAUTION
-    return 0;     // SAFE
-}
-
-static void DrawDetectBox(
+static std::vector<Object> ConvertDetectionsToTrackObjects(
     const std::vector<arm::app::yolov8n_od::DetectionResult> &results,
-    image_t *drawImg,
-    std::vector<std::string> &labels,
-	BYTETracker *tracker
+    std::vector<arm::app::warning::FrameObject> *rawWarningObjects = nullptr
 )
 {
-	arm::app::yolov8n_od::DetectionResult detectBox;
-	int boxSize = results.size();
     std::vector<struct Object> detObjects;
+    detObjects.reserve(results.size());
+
+    if (rawWarningObjects)
+    {
+        rawWarningObjects->clear();
+        rawWarningObjects->reserve(results.size());
+    }
+
+    for (size_t p = 0; p < results.size(); ++p)
+    {
+        const arm::app::yolov8n_od::DetectionResult &detectBox = results[p];
+        struct Object detObject;
+
+        detObject.rect.x = detectBox.m_detectBox.x;
+        detObject.rect.y = detectBox.m_detectBox.y;
+        detObject.rect.w = detectBox.m_detectBox.w;
+        detObject.rect.h = detectBox.m_detectBox.h;
+        detObject.label = detectBox.m_detectBox.cls;
+        detObject.prob = detectBox.m_detectBox.normalisedVal;
+        detObjects.push_back(detObject);
+
+        if (rawWarningObjects)
+        {
+            arm::app::warning::FrameObject rawObject;
+            rawObject.id = static_cast<int>(p);
+            rawObject.source = arm::app::warning::WarningSource::RawFallback;
+            rawObject.class_id = detectBox.m_detectBox.cls;
+            rawObject.bbox = detectBox.m_detectBox;
+            rawObject.score = detectBox.m_detectBox.normalisedVal;
+            rawWarningObjects->push_back(rawObject);
+        }
+    }
+
+    return detObjects;
+}
+
+static std::vector<arm::app::warning::FrameObject> ConvertTracksToWarningObjects(
+    const std::vector<STrack> &tracks)
+{
+    std::vector<arm::app::warning::FrameObject> warningObjects;
+    warningObjects.reserve(tracks.size());
+
+    for (const auto &track : tracks)
+    {
+        arm::app::warning::FrameObject object;
+        object.id = track.track_id;
+        object.source = arm::app::warning::WarningSource::Tracker;
+        object.class_id = track.class_id;
+        object.bbox.x = static_cast<int>(track.tlwh[0]);
+        object.bbox.y = static_cast<int>(track.tlwh[1]);
+        object.bbox.w = static_cast<int>(track.tlwh[2]);
+        object.bbox.h = static_cast<int>(track.tlwh[3]);
+        object.bbox.cls = track.class_id;
+        object.bbox.normalisedVal = track.score;
+        object.score = track.score;
+        warningObjects.push_back(object);
+    }
+
+    return warningObjects;
+}
+
+static void DrawRawDetections(
+    const std::vector<arm::app::yolov8n_od::DetectionResult> &results,
+    image_t *drawImg)
+{
+    const int rawColor = COLOR_R8_G8_B8_TO_RGB565(0, 160, 255);
+    for (const auto &detectBox : results)
+    {
+        imlib_draw_rectangle(drawImg,
+                             detectBox.m_detectBox.x,
+                             detectBox.m_detectBox.y,
+                             detectBox.m_detectBox.w,
+                             detectBox.m_detectBox.h,
+                             rawColor,
+                             1,
+                             false);
+    }
+}
+
+static void DrawTrackedDetections(
+    const std::vector<STrack> &tracks,
+    image_t *drawImg,
+    const std::vector<std::string> &labels)
+{
     char szDisplayText[100];
-    int best_severity = -1;
-    int best_direction = 1;
-    float best_area_ratio = 0.0f;
 
-    static int last_printed_severity = -1;
-    static int last_printed_direction = -1;
-    static uint32_t last_known_print_frame = 0;
+    for (const auto &track : tracks)
+    {
+        const vector<float> &tlwh = track.tlwh;
+        const int colorIdx = track.track_id + 3;
+        const int trackColor = COLOR_R8_G8_B8_TO_RGB565(37 * colorIdx % 255, 17 * colorIdx % 255, 29 * colorIdx % 255);
 
-	for(int p = 0; p < boxSize; p ++)
-	{
-		struct Object detObject;
-
-		detectBox = results[p];
-		detObject.rect.x = detectBox.m_detectBox.x;
-		detObject.rect.y = detectBox.m_detectBox.y;
-		detObject.rect.w = detectBox.m_detectBox.w;
-		detObject.rect.h = detectBox.m_detectBox.h;
-
-		detObject.label = detectBox.m_detectBox.cls;
-		detObject.prob = detectBox.m_detectBox.normalisedVal;
-
-		detObjects.push_back(detObject);
-	}
-	
-	
-	vector<STrack> output_stracks = tracker->update(detObjects);
-	
-	for(int t = 0; t < output_stracks.size(); t ++)
-	{
-		STrack track = output_stracks[t];
-		vector<float> tlwh = track.tlwh;
-		int colorIdx = track.track_id + 3;
-		int trackColor = COLOR_R8_G8_B8_TO_RGB565(37 * colorIdx % 255, 17 * colorIdx % 255, 29 * colorIdx % 255);		
-		
-		sprintf(szDisplayText, "%d: %s", track.track_id, labels[track.class_id].c_str());		
-		imlib_draw_rectangle(drawImg, (int)tlwh[0], (int)tlwh[1], (int)tlwh[2], (int)tlwh[3], trackColor, 2, false);
+        sprintf(szDisplayText, "%d: %s", track.track_id, GetSafeLabel(labels, track.class_id));
+        imlib_draw_rectangle(drawImg, (int)tlwh[0], (int)tlwh[1], (int)tlwh[2], (int)tlwh[3], trackColor, 2, false);
         imlib_draw_string(drawImg, (int)tlwh[0], (int)tlwh[1] - 16, szDisplayText, trackColor, 2, 0, 0, false,
-                          false, false, false, 0, false, false);	
+                          false, false, false, 0, false, false);
+    }
+}
 
-        // ===== EdgeEye 警告邏輯（每幀只保留最危險事件） =====
-        float img_w = (float)drawImg->w;   // 320
-        float img_h = (float)drawImg->h;   // 240
-
-        // 計算 BBox 佔畫面比例（估距離）
-        float bbox_area_ratio = (tlwh[2] * tlwh[3]) / (img_w * img_h);
-
-        // 判斷左中右
-        float bbox_center_x = tlwh[0] + tlwh[2] / 2.0f;
-        const int direction = GetDirectionIndex(bbox_center_x, img_w);
-
-        // 判斷距離
-        const int severity = GetDangerSeverity(bbox_area_ratio);
-
-        if ((severity > best_severity) || ((severity == best_severity) && (bbox_area_ratio > best_area_ratio))) {
-            best_severity = severity;
-            best_direction = direction;
-            best_area_ratio = bbox_area_ratio;
-        }
+static void DrawWarningHighlight(
+    const arm::app::warning::WarningEvent &event,
+    image_t *drawImg,
+    const std::vector<std::string> &labels)
+{
+    if (!event.has_candidate)
+    {
+        return;
     }
 
-    if (best_severity >= 0) {
-        g_known_best_severity = best_severity;
-        g_known_best_direction = best_direction;
-        g_known_best_area_ratio = best_area_ratio;
+    const int color =
+        (event.severity == arm::app::warning::WarningSeverity::Danger)
+            ? COLOR_R8_G8_B8_TO_RGB565(255, 64, 64)
+            : COLOR_R8_G8_B8_TO_RGB565(255, 220, 0);
 
-        // SAFE 不輸出，避免大量洗版；只輸出 CAUTION/DANGER，且加節流與狀態變化觸發。
-        if (best_severity >= 1) {
-            const bool changed = (best_severity != last_printed_severity) || (best_direction != last_printed_direction);
-            if (changed || ((g_frame_seq - last_known_print_frame) >= KNOWN_ALERT_PRINT_INTERVAL_FRAMES)) {
-                printf("[%s] %s (area=%.2f)\n", g_zone_names[best_direction], g_danger_level_names[best_severity], best_area_ratio);
-                last_printed_severity = best_severity;
-                last_printed_direction = best_direction;
-                last_known_print_frame = g_frame_seq;
-            }
-        } else {
-            last_printed_severity = -1;
-            last_printed_direction = -1;
-        }
+    char szDisplayText[120];
+    sprintf(szDisplayText,
+            "%s %s",
+            arm::app::warning::ToString(event.severity),
+            GetSafeLabel(labels, event.class_id));
+
+    imlib_draw_rectangle(drawImg,
+                         event.bbox.x,
+                         event.bbox.y,
+                         event.bbox.w,
+                         event.bbox.h,
+                         color,
+                         3,
+                         false);
+    imlib_draw_string(drawImg,
+                      event.bbox.x,
+                      std::max(0, event.bbox.y - 18),
+                      szDisplayText,
+                      color,
+                      2,
+                      0,
+                      0,
+                      false,
+                      false,
+                      false,
+                      false,
+                      0,
+                      false,
+                      false);
+}
+
+static void LogWarningEvent(
+    const arm::app::warning::WarningEvent &event,
+    const std::vector<std::string> &labels)
+{
+    if (!event.emitted)
+    {
+        return;
     }
+
+    printf("[WARN][%s][%s] %s %s risk=%.2f overlap=%.2f\n",
+           arm::app::warning::ToString(event.source),
+           g_zone_names[event.zone],
+           arm::app::warning::ToString(event.severity),
+           GetSafeLabel(labels, event.class_id),
+           event.risk_score,
+           event.path_overlap);
+}
+
+static arm::app::warning::WarningEvent RenderDetectionsAndWarnings(
+    const std::vector<arm::app::yolov8n_od::DetectionResult> &results,
+    image_t *drawImg,
+    const std::vector<std::string> &labels,
+    BYTETracker *tracker,
+    arm::app::warning::WarningEngine *warningEngine)
+{
+    std::vector<arm::app::warning::FrameObject> rawWarningObjects;
+    std::vector<Object> detObjects = ConvertDetectionsToTrackObjects(results, &rawWarningObjects);
+    std::vector<STrack> output_stracks = tracker->update(detObjects);
+    std::vector<arm::app::warning::FrameObject> trackerWarningObjects = ConvertTracksToWarningObjects(output_stracks);
+
+    if (kDebugViewMode == arm::app::warning::DebugViewMode::RawOnly ||
+        kDebugViewMode == arm::app::warning::DebugViewMode::RawWithTracks)
+    {
+        DrawRawDetections(results, drawImg);
+    }
+
+    if (kDebugViewMode == arm::app::warning::DebugViewMode::RawWithTracks)
+    {
+        DrawTrackedDetections(output_stracks, drawImg, labels);
+    }
+
+    arm::app::warning::WarningEvent event = warningEngine->Update(g_frame_seq, trackerWarningObjects, rawWarningObjects);
+    DrawWarningHighlight(event, drawImg, labels);
+    LogWarningEvent(event, labels);
+    return event;
 }
 
 static int32_t PrepareModelToHyperRAM(void)
@@ -554,7 +658,7 @@ int main()
 #if defined (__USE_DISPLAY__)
     char szDisplayText[100];
     char szSidePanelText[64];
-    char szUnknownText[64];
+    char szDebugText[64];
     S_DISP_RECT sDispRect;
     S_DISP_RECT sSidePanelRect;
     uint32_t u32LcdWidth;
@@ -578,8 +682,8 @@ int main()
     if (u32LcdWidth > (u32RenderedImgWidth + (FONT_WIDTH * 8)))
     {
         const int desiredScale = 8;
-        const int longestTextChars = 19; // "U:LEFT/CENTER/RIGHT"
-        const int panelLines = 3;        // STATUS, known, unknown
+        const int longestTextChars = 26; // "W:DANGER CENTER microwave"
+        const int panelLines = 3;        // STATUS, warning, debug
         int maxScaleByWidth;
         int maxScaleByHeight;
         int fitScale;
@@ -615,6 +719,7 @@ int main()
 #endif
 
     BYTETracker tracker(IMAGE_REAL_FRAMRATE, 30);
+    arm::app::warning::WarningEngine warningEngine(frameBuffer.w, frameBuffer.h);
 	
 	while(1)
 	{
@@ -709,9 +814,7 @@ int main()
 				infFramebuf->results);
 
             g_frame_seq++;
-            g_known_best_severity = -1;
-            g_known_best_direction = 1;
-            g_known_best_area_ratio = 0.0f;
+            g_last_warning_event = arm::app::warning::WarningEvent{};
 
 #if defined(__PROFILE__)
 			u64EndCycle = pmu_get_systick_Count();
@@ -719,14 +822,17 @@ int main()
 #endif
 
             //draw bbox and render
-            /* Draw boxes. */
-			if(infFramebuf->results.size())
-			{
+            {
 #if defined(__PROFILE__)
 				u64StartCycle = pmu_get_systick_Count();
 #endif
 
-				DrawDetectBox(infFramebuf->results, &infFramebuf->frameImage, labels, &tracker);
+				g_last_warning_event = RenderDetectionsAndWarnings(
+                    infFramebuf->results,
+                    &infFramebuf->frameImage,
+                    labels,
+                    &tracker,
+                    &warningEngine);
 
 #if defined(__PROFILE__)
 				u64EndCycle = pmu_get_systick_Count();
@@ -745,6 +851,7 @@ int main()
 #if defined(__PROFILE__)
             u64StartCycle = pmu_get_systick_Count();
 #endif
+#if ENABLE_UNKNOWN_EXPERIMENT
             // ===== Frame Difference 幀差法（低解析度版）=====
             if (prev_frame_valid) {
                 uint16_t *curr = (uint16_t *)infFramebuf->frameImage.data;
@@ -849,6 +956,7 @@ int main()
             }
             prev_frame_valid = true;
             // ===== END Frame Difference =====         
+#endif
 
             Display_FillRect((uint16_t *)infFramebuf->frameImage.data, &sDispRect, IMAGE_DISP_UPSCALE_FACTOR);
 
@@ -856,60 +964,51 @@ int main()
             {
                 uint32_t lineY = 4;
                 uint32_t textColor = C_BLACK;
-                bool firstUnknown = true;
 
                 Display_ClearRect(C_WHITE, &sSidePanelRect);
 
                 Display_PutText("STATUS", 6, sSidePanelRect.u32TopLeftX + 4, lineY, C_BLUE, C_WHITE, false, i32SideTextScale);
                 lineY += u32SideLineStep;
 
-                if (g_known_best_severity >= 0)
+                if (g_last_warning_event.has_candidate)
                 {
-                    sprintf(szSidePanelText, "K:%s %s", g_zone_names[g_known_best_direction], g_danger_level_names[g_known_best_severity]);
+                    sprintf(szSidePanelText,
+                            "W:%s %s",
+                            arm::app::warning::ToString(g_last_warning_event.severity),
+                            g_zone_names[g_last_warning_event.zone]);
 
-                    if (g_known_best_severity == 2)
+                    if (g_last_warning_event.severity == arm::app::warning::WarningSeverity::Danger)
                         textColor = C_RED;
-                    else if (g_known_best_severity == 1)
+                    else if (g_last_warning_event.severity == arm::app::warning::WarningSeverity::Caution)
                         textColor = C_YELLOW;
                     else
                         textColor = C_GREEN;
                 }
                 else
                 {
-                    sprintf(szSidePanelText, "K:NONE");
+                    sprintf(szSidePanelText, "W:NONE");
                     textColor = C_BLACK;
                 }
 
                 Display_PutText(szSidePanelText, strlen(szSidePanelText), sSidePanelRect.u32TopLeftX + 4, lineY, textColor, C_WHITE, false, i32SideTextScale);
                 lineY += u32SideLineStep;
 
-                std::memset(szUnknownText, 0, sizeof(szUnknownText));
-                strcpy(szUnknownText, "U:");
-
-                for (int z = 0; z < ZONE_COUNT; z++)
+                std::memset(szDebugText, 0, sizeof(szDebugText));
+                if (g_last_warning_event.has_candidate)
                 {
-                    if (g_unknown_active[z])
-                    {
-                        if (!firstUnknown)
-                        {
-                            strcat(szUnknownText, "/");
-                        }
-                        strcat(szUnknownText, g_zone_names[z]);
-                        firstUnknown = false;
-                    }
-                }
-
-                if (firstUnknown)
-                {
-                    strcat(szUnknownText, "NONE");
-                    textColor = C_GREEN;
+                    sprintf(szDebugText,
+                            "SRC:%s %s",
+                            arm::app::warning::ToString(g_last_warning_event.source),
+                            GetSafeLabel(labels, g_last_warning_event.class_id));
+                    textColor = C_BLUE;
                 }
                 else
                 {
-                    textColor = C_RED;
+                    sprintf(szDebugText, "DBG:RAW+TRK");
+                    textColor = C_BLACK;
                 }
 
-                Display_PutText(szUnknownText, strlen(szUnknownText), sSidePanelRect.u32TopLeftX + 4, lineY, textColor, C_WHITE, false, i32SideTextScale);
+                Display_PutText(szDebugText, strlen(szDebugText), sSidePanelRect.u32TopLeftX + 4, lineY, textColor, C_WHITE, false, i32SideTextScale);
             }
 
 #if defined(__PROFILE__)
@@ -1064,6 +1163,3 @@ int main()
 	
     return 0;
 }
-
-
-
