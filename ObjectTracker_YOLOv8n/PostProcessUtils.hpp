@@ -35,6 +35,23 @@ struct AnchorBox {
     float h;
 };
 
+struct OutputTensorShape {
+    int index;
+    int dimsSize;
+    int anchors;
+    int valuesPerAnchor;
+};
+
+struct OutputTensorMapping {
+    bool valid = false;
+    int stride8Box = -1;
+    int stride8Confidence = -1;
+    int stride16Box = -1;
+    int stride16Confidence = -1;
+    int stride32Box = -1;
+    int stride32Confidence = -1;
+};
+
 inline float CalculateBoxIntersect(const Box& box1, const Box& box2)
 {
     const float left = std::max(box1.x, box2.x);
@@ -179,6 +196,81 @@ inline S_DETECTION_BOX ClampAndValidateDetectionBox(
 inline bool IsValidDetectionBox(const S_DETECTION_BOX& box)
 {
     return box.w > 1 && box.h > 1;
+}
+
+inline bool AssignOutputTensorIndex(OutputTensorMapping& mapping, int anchors, bool isBoxTensor, int index, int stride8Anchors, int stride16Anchors, int stride32Anchors)
+{
+    int* target = nullptr;
+
+    if (anchors == stride8Anchors)
+    {
+        target = isBoxTensor ? &mapping.stride8Box : &mapping.stride8Confidence;
+    }
+    else if (anchors == stride16Anchors)
+    {
+        target = isBoxTensor ? &mapping.stride16Box : &mapping.stride16Confidence;
+    }
+    else if (anchors == stride32Anchors)
+    {
+        target = isBoxTensor ? &mapping.stride32Box : &mapping.stride32Confidence;
+    }
+    else
+    {
+        return false;
+    }
+
+    if (*target != -1)
+    {
+        return false;
+    }
+
+    *target = index;
+    return true;
+}
+
+inline OutputTensorMapping ResolveOutputTensorMapping(
+    const std::vector<OutputTensorShape>& shapes,
+    int expectedClasses,
+    int stride8Anchors,
+    int stride16Anchors,
+    int stride32Anchors)
+{
+    OutputTensorMapping mapping{};
+
+    for (const auto& shape : shapes)
+    {
+        if (shape.dimsSize != 3)
+        {
+            continue;
+        }
+
+        if (shape.valuesPerAnchor == 64)
+        {
+            if (!AssignOutputTensorIndex(mapping, shape.anchors, true, shape.index, stride8Anchors, stride16Anchors, stride32Anchors))
+            {
+                return OutputTensorMapping{};
+            }
+            continue;
+        }
+
+        if (shape.valuesPerAnchor == expectedClasses)
+        {
+            if (!AssignOutputTensorIndex(mapping, shape.anchors, false, shape.index, stride8Anchors, stride16Anchors, stride32Anchors))
+            {
+                return OutputTensorMapping{};
+            }
+        }
+    }
+
+    mapping.valid =
+        mapping.stride8Box >= 0 &&
+        mapping.stride8Confidence >= 0 &&
+        mapping.stride16Box >= 0 &&
+        mapping.stride16Confidence >= 0 &&
+        mapping.stride32Box >= 0 &&
+        mapping.stride32Confidence >= 0;
+
+    return mapping;
 }
 
 } /* namespace yolov8n_od */

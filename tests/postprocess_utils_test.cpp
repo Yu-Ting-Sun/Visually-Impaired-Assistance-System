@@ -79,6 +79,28 @@ void TestClampConvertedBoxRejectsDegenerateBoxes()
            "Degenerate boxes should be converted into invalid zero-sized boxes");
 }
 
+void TestResolveOutputTensorLayoutByShape()
+{
+    const std::vector<OutputTensorShape> shapes = {
+        {0, 3, 144, 50},
+        {1, 3, 576, 64},
+        {2, 3, 36, 50},
+        {3, 3, 576, 50},
+        {4, 3, 36, 64},
+        {5, 3, 144, 64},
+    };
+
+    const OutputTensorMapping mapping = ResolveOutputTensorMapping(shapes, 50, 576, 144, 36);
+
+    Expect(mapping.valid, "Output tensor mapping should succeed for shuffled 6-output YOLO heads");
+    Expect(mapping.stride8Box == 1, "stride-8 box tensor should be resolved by shape");
+    Expect(mapping.stride8Confidence == 3, "stride-8 confidence tensor should be resolved by shape");
+    Expect(mapping.stride16Box == 5, "stride-16 box tensor should be resolved by shape");
+    Expect(mapping.stride16Confidence == 0, "stride-16 confidence tensor should be resolved by shape");
+    Expect(mapping.stride32Box == 4, "stride-32 box tensor should be resolved by shape");
+    Expect(mapping.stride32Confidence == 2, "stride-32 confidence tensor should be resolved by shape");
+}
+
 } // namespace
 
 int main()
@@ -86,6 +108,7 @@ int main()
     TestIoUUsesTopLeftGeometry();
     TestClasswiseNmsSortsByEachClass();
     TestClampConvertedBoxRejectsDegenerateBoxes();
+    TestResolveOutputTensorLayoutByShape();
     std::cout << "postprocess_utils_test: PASS\n";
     return 0;
 }

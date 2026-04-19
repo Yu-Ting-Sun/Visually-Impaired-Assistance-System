@@ -258,7 +258,11 @@ YOLOv8nODPostProcessing::YOLOv8nODPostProcessing(
 	//Anchor arrary would be [0.5,0.5], [1.5,0.5], ...[5.5, 0.5], [0.5,1.5], .....
 	//So anchors box dimension will m_anchors_stride32[i]*32, [16x16], [48x16], ...,[176x16], [16x48], ...
 	AnchorMatrixConstruct(m_stride32_anchros, YOLOV8N_OD_STRIDE_32, m_stride32_total_anchors);
-	
+
+    if (!ResolveOutputTensorMapping())
+    {
+        printf("YOLOv8nODPostProcessing(): failed to resolve output tensor mapping\n");
+    }
 }
 
 void YOLOv8nODPostProcessing::RunPostProcessing(
@@ -309,24 +313,68 @@ void YOLOv8nODPostProcessing::RunPostProcessing(
 void YOLOv8nODPostProcessing::GetNetworkBoxes(
         std::forward_list<Detection>& detections)
 {
+    if (!m_outputTensorMapping.valid && !ResolveOutputTensorMapping())
+    {
+        printf("GetNetworkBoxes(): output tensor mapping unavailable\n");
+        return;
+    }
+
 	TfLiteTensor* psConfidenceTensor;
 	TfLiteTensor* psBoxTensor;
 	
-	psConfidenceTensor = m_model->GetOutputTensor(YOLOV8N_OD_STRIDE8_CONFIDENCE_TENSOR_INDEX);
-	psBoxTensor = m_model->GetOutputTensor(YOLOV8N_OD_STRIDE8_BOX_TENSOR_INDEX);
+	psConfidenceTensor = m_model->GetOutputTensor(m_outputTensorMapping.stride8Confidence);
+	psBoxTensor = m_model->GetOutputTensor(m_outputTensorMapping.stride8Box);
 	
 	CalDetectionBox(psConfidenceTensor, psBoxTensor, m_stride8_anchros, YOLOV8N_OD_STRIDE_8, m_stride8_total_anchors, m_threshold, detections); 
 
-	psConfidenceTensor = m_model->GetOutputTensor(YOLOV8N_OD_STRIDE16_CONFIDENCE_TENSOR_INDEX);
-	psBoxTensor = m_model->GetOutputTensor(YOLOV8N_OD_STRIDE16_BOX_TENSOR_INDEX);
+	psConfidenceTensor = m_model->GetOutputTensor(m_outputTensorMapping.stride16Confidence);
+	psBoxTensor = m_model->GetOutputTensor(m_outputTensorMapping.stride16Box);
 	
 	CalDetectionBox(psConfidenceTensor, psBoxTensor, m_stride16_anchros, YOLOV8N_OD_STRIDE_16, m_stride16_total_anchors, m_threshold, detections); 
 
-	psConfidenceTensor = m_model->GetOutputTensor(YOLOV8N_OD_STRIDE32_CONFIDENCE_TENSOR_INDEX);
-	psBoxTensor = m_model->GetOutputTensor(YOLOV8N_OD_STRIDE32_BOX_TENSOR_INDEX);
+	psConfidenceTensor = m_model->GetOutputTensor(m_outputTensorMapping.stride32Confidence);
+	psBoxTensor = m_model->GetOutputTensor(m_outputTensorMapping.stride32Box);
 	
 	CalDetectionBox(psConfidenceTensor, psBoxTensor, m_stride32_anchros, YOLOV8N_OD_STRIDE_32, m_stride32_total_anchors, m_threshold, detections); 
 
+}
+
+bool YOLOv8nODPostProcessing::ResolveOutputTensorMapping()
+{
+    std::vector<OutputTensorShape> shapes;
+    shapes.reserve(m_model->GetNumOutputs());
+
+    for (size_t i = 0; i < m_model->GetNumOutputs(); ++i)
+    {
+        TfLiteTensor* tensor = m_model->GetOutputTensor(i);
+        if (!tensor || !tensor->dims || tensor->dims->size < 3)
+        {
+            continue;
+        }
+
+        shapes.push_back(
+            {
+                static_cast<int>(i),
+                tensor->dims->size,
+                tensor->dims->data[1],
+                tensor->dims->data[2],
+            });
+    }
+
+    m_outputTensorMapping = arm::app::yolov8n_od::ResolveOutputTensorMapping(
+        shapes,
+        YOLOV8N_OD_CLASS,
+        m_stride8_total_anchors,
+        m_stride16_total_anchors,
+        m_stride32_total_anchors);
+
+    if (!m_outputTensorMapping.valid)
+    {
+        printf("ResolveOutputTensorMapping(): unable to match YOLO raw outputs\n");
+        return false;
+    }
+
+    return true;
 }
 
 } /* namespace YOLOv8nODPostProcessing */

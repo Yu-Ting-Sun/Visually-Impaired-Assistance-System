@@ -48,7 +48,14 @@ void TestCorridorOverlapPrefersForwardObjects()
 void TestWarningWhitelistRejectsSmallPortableClasses()
 {
     Expect(IsWarningClass(0), "person should be in the warning whitelist");
-    Expect(!IsWarningClass(39), "bottle should stay out of the warning whitelist");
+    Expect(IsWarningClass(1), "chair should be in the warning whitelist");
+    Expect(IsWarningClass(2), "table should be in the warning whitelist");
+    Expect(IsWarningClass(4), "couch should be in the warning whitelist");
+    Expect(IsWarningClass(24), "backpack should be in the warning whitelist");
+    Expect(IsWarningClass(26), "handbag should be in the warning whitelist");
+    Expect(IsWarningClass(28), "suitcase should be in the warning whitelist");
+    Expect(!IsWarningClass(15), "bottle should stay out of the warning whitelist");
+    Expect(!NeedsApproachEvidence(2), "indoor warning classes should not require class-specific approach evidence");
 }
 
 void TestDangerFastPathTriggersOnRapidApproach()
@@ -74,7 +81,7 @@ void TestRawFallbackNeedsStableFrames()
     WarningEngine engine(320, 240);
     WarningEvent event{};
 
-    FrameObject rawCandidate = MakeObject(-1, WarningSource::RawFallback, 56, 110, 90, 100, 130, 0.88f);
+    FrameObject rawCandidate = MakeObject(-1, WarningSource::RawFallback, 1, 110, 90, 100, 130, 0.88f);
 
     event = engine.Update(1, {rawCandidate});
     Expect(!event.emitted, "Raw fallback should not emit on the first frame");

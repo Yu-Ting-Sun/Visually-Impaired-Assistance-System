@@ -96,25 +96,12 @@ inline bool IsWarningClass(int cls)
     switch (cls)
     {
     case 0:  // person
-    case 1:  // bicycle
-    case 2:  // car
-    case 3:  // motorcycle
-    case 5:  // bus
-    case 7:  // truck
-    case 13: // bench
+    case 1:  // chair
+    case 2:  // table
+    case 4:  // couch
     case 24: // backpack
     case 26: // handbag
     case 28: // suitcase
-    case 56: // chair
-    case 57: // couch
-    case 58: // potted plant
-    case 59: // bed
-    case 60: // dining table
-    case 61: // toilet
-    case 62: // tv
-    case 68: // microwave
-    case 69: // oven
-    case 72: // refrigerator
         return true;
     default:
         return false;
@@ -123,7 +110,8 @@ inline bool IsWarningClass(int cls)
 
 inline bool NeedsApproachEvidence(int cls)
 {
-    return cls == 62 || cls == 68 || cls == 69 || cls == 72;
+    (void)cls;
+    return false;
 }
 
 inline int ComputeZoneIndex(const S_DETECTION_BOX& bbox, int imgWidth)
