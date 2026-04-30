@@ -14,12 +14,17 @@
 #define ZONE_COUNT 3
 
 #define KNOWN_ALERT_PRINT_INTERVAL_FRAMES 10
+#define KNOWN_CAUTION_AREA_RATIO_THRESHOLD 0.03f
+#define KNOWN_DANGER_AREA_RATIO_THRESHOLD 0.10f
 
 #define UNKNOWN_MOTION_PIXEL_THRESHOLD 12
 #define UNKNOWN_ZONE_RATIO_THRESHOLD 0.08f
 #define UNKNOWN_ENTER_FRAMES 3
 #define UNKNOWN_EXIT_FRAMES 4
 #define UNKNOWN_REPRINT_INTERVAL_FRAMES 30
+#define SHAKE_MOTION_PIXEL_THRESHOLD 18
+#define SHAKE_GLOBAL_MOTION_RATIO_THRESHOLD 0.22f
+#define SHAKE_DETECTION_HOLD_FRAMES 2
 
 __attribute__((section(".bss.vram.data"), aligned(32))) static uint8_t prev_frame[FDOWNSAMPLE_W * FDOWNSAMPLE_H];
 static bool prev_frame_valid = false;
@@ -40,6 +45,7 @@ static float g_known_best_area_ratio = 0.0f;
 #include "YOLOv8nODModel.hpp"       /* Model API */
 #include "YOLOv8nODPostProcessing.hpp"
 #include "Labels.hpp"
+#include "VoicePlayer.hpp"
 
 #include "imlib.h"          /* Image processing */
 #include "framebuffer.h"
@@ -82,6 +88,10 @@ static float g_known_best_area_ratio = 0.0f;
 #define MODEL_AT_HYPERRAM_ADDR (0x82400000)
 
 #define OD_PRESENCE_THRESHOLD  				(0.5)
+#define OD_PRESENCE_THRESHOLD_NIGHT            (0.35f)
+#define LOW_LIGHT_LUMA_THRESHOLD               (58U)
+#define LOW_LIGHT_MAX_GAIN_DELTA_Q8           (154U)  /* max extra gain ~= +0.60 */
+#define LOW_LIGHT_MAX_LIFT                     (22U)  /* max additive lift in 8-bit domain */
 
 typedef enum
 {
@@ -95,6 +105,7 @@ typedef struct
     E_FRAMEBUF_STATE eState;
     image_t frameImage;
     std::vector<arm::app::yolov8n_od::DetectionResult> results;
+    bool bLowLight;
 } S_FRAMEBUF;
 
 
@@ -215,6 +226,7 @@ static void omv_init()
     for (i = 0 ; i < NUM_FRAMEBUF; i++)
     {
         s_asFramebuf[i].eState = eFRAMEBUF_EMPTY;
+        s_asFramebuf[i].bLowLight = false;
     }
 
     framebuffer_init_image(&s_asFramebuf[0].frameImage);
@@ -252,11 +264,93 @@ static inline int GetDirectionIndex(float bbox_center_x, float img_w)
 
 static inline int GetDangerSeverity(float bbox_area_ratio)
 {
-    if (bbox_area_ratio > 0.15f)
+    if (bbox_area_ratio > KNOWN_DANGER_AREA_RATIO_THRESHOLD)
         return 2; // DANGER
-    if (bbox_area_ratio > 0.05f)
+    if (bbox_area_ratio > KNOWN_CAUTION_AREA_RATIO_THRESHOLD)
         return 1; // CAUTION
     return 0;     // SAFE
+}
+
+static inline uint8_t ClampU8(int value)
+{
+    if (value < 0) return 0;
+    if (value > 255) return 255;
+    return (uint8_t)value;
+}
+
+/* Fast luma estimate from RGB888 input tensor buffer. */
+static uint8_t EstimateMeanLumaRgb888(const uint8_t *rgb, size_t bytes)
+{
+    if (!rgb || bytes < 3)
+        return 255;
+
+    const size_t pixels = bytes / 3;
+    const size_t target_samples = 4096;
+    const size_t step = (pixels > target_samples) ? (pixels / target_samples) : 1;
+
+    uint64_t luma_sum = 0;
+    size_t sample_count = 0;
+
+    for (size_t p = 0; p < pixels; p += step) {
+        const size_t idx = p * 3;
+        const int r = rgb[idx + 0];
+        const int g = rgb[idx + 1];
+        const int b = rgb[idx + 2];
+        luma_sum += (uint32_t)((77 * r + 150 * g + 29 * b) >> 8);
+        sample_count++;
+    }
+
+    if (sample_count == 0)
+        return 255;
+
+    return (uint8_t)(luma_sum / sample_count);
+}
+
+/* Apply night-only brightness compensation. Daytime path stays untouched. */
+static void ApplyLowLightBoostRgb888(uint8_t *rgb, size_t bytes, uint8_t mean_luma)
+{
+    if (!rgb || bytes == 0 || mean_luma >= LOW_LIGHT_LUMA_THRESHOLD)
+        return;
+
+    const uint32_t darkness_q8 =
+        ((uint32_t)(LOW_LIGHT_LUMA_THRESHOLD - mean_luma) << 8) / LOW_LIGHT_LUMA_THRESHOLD;
+    const uint32_t gain_q8 = 256U + ((darkness_q8 * LOW_LIGHT_MAX_GAIN_DELTA_Q8) >> 8);
+    const uint32_t lift = (darkness_q8 * LOW_LIGHT_MAX_LIFT + 128U) >> 8;
+
+    for (size_t i = 0; i < bytes; ++i) {
+        const int boosted = (int)(((uint32_t)rgb[i] * gain_q8) >> 8) + (int)lift;
+        rgb[i] = ClampU8(boosted);
+    }
+}
+
+/* Estimate global frame motion ratio using low-resolution gray map for shake detection. */
+static float EstimateGlobalMotionRatioRgb565(const uint16_t *curr)
+{
+    if (!curr || !prev_frame_valid)
+        return 0.0f;
+
+    int moving = 0;
+    const int total = FDOWNSAMPLE_W * FDOWNSAMPLE_H;
+
+    for (int y = 0; y < FDOWNSAMPLE_H; ++y) {
+        for (int x = 0; x < FDOWNSAMPLE_W; ++x) {
+            const int idx = y * FDOWNSAMPLE_W + x;
+            const int src_x = (x * GLCD_WIDTH) / FDOWNSAMPLE_W;
+            const int src_y = (y * GLCD_HEIGHT) / FDOWNSAMPLE_H;
+
+            const uint8_t curr_gray = RGB565ToGray(curr[src_y * GLCD_WIDTH + src_x]);
+            const uint8_t prev_gray = prev_frame[idx];
+            const int diff = abs((int)curr_gray - (int)prev_gray);
+
+            if (diff > SHAKE_MOTION_PIXEL_THRESHOLD)
+                moving++;
+        }
+    }
+
+    if (total <= 0)
+        return 0.0f;
+
+    return (float)moving / (float)total;
 }
 
 static void DrawDetectBox(
@@ -272,11 +366,16 @@ static void DrawDetectBox(
     char szDisplayText[100];
     int best_severity = -1;
     int best_direction = 1;
+    int best_class_id = -1;
     float best_area_ratio = 0.0f;
 
     static int last_printed_severity = -1;
     static int last_printed_direction = -1;
     static uint32_t last_known_print_frame = 0;
+    static int last_spoken_severity = -1;
+    static int last_spoken_direction = -1;
+    static int last_spoken_class_id = -1;
+    static uint32_t last_spoken_frame = 0;
 
 	for(int p = 0; p < boxSize; p ++)
 	{
@@ -326,6 +425,7 @@ static void DrawDetectBox(
         if ((severity > best_severity) || ((severity == best_severity) && (bbox_area_ratio > best_area_ratio))) {
             best_severity = severity;
             best_direction = direction;
+            best_class_id = track.class_id;
             best_area_ratio = bbox_area_ratio;
         }
     }
@@ -343,6 +443,23 @@ static void DrawDetectBox(
                 last_printed_severity = best_severity;
                 last_printed_direction = best_direction;
                 last_known_print_frame = g_frame_seq;
+            }
+
+            // 語音警示：狀態 (方向/類別/嚴重度) 變化才播，且與上次語音間隔 >= 冷卻 frames。
+            #define VOICE_COOLDOWN_FRAMES (IMAGE_REAL_FRAMRATE * 3)
+            const bool voice_state_changed =
+                (best_severity  != last_spoken_severity) ||
+                (best_direction != last_spoken_direction) ||
+                (best_class_id  != last_spoken_class_id);
+            const uint32_t since_last_voice = g_frame_seq - last_spoken_frame;
+            if (voice_state_changed && (since_last_voice >= VOICE_COOLDOWN_FRAMES || last_spoken_severity < 0)) {
+                printf("[voice trig] dir=%d cls=%d sev=%d\n", best_direction, best_class_id, best_severity);
+                VoicePlay_StopAll();
+                VoicePlay_Speak(best_direction, best_class_id, best_severity);
+                last_spoken_severity  = best_severity;
+                last_spoken_direction = best_direction;
+                last_spoken_class_id  = best_class_id;
+                last_spoken_frame     = g_frame_seq;
             }
         } else {
             last_printed_severity = -1;
@@ -509,7 +626,8 @@ int main()
     arm::app::QuantParams inQuantParams = arm::app::GetTensorQuantParams(inputTensor);
 	
     // postProcess
-    arm::app::yolov8n_od::YOLOv8nODPostProcessing postProcess(&model, OD_PRESENCE_THRESHOLD);
+    arm::app::yolov8n_od::YOLOv8nODPostProcessing postProcessDay(&model, OD_PRESENCE_THRESHOLD);
+    arm::app::yolov8n_od::YOLOv8nODPostProcessing postProcessNight(&model, OD_PRESENCE_THRESHOLD_NIGHT);
 
     //label information
     std::vector<std::string> labels;
@@ -615,9 +733,14 @@ int main()
 #endif
 
     BYTETracker tracker(IMAGE_REAL_FRAMRATE, 30);
-	
+
+    /* Init voice warning player (I2S + NAU8822 -> 3.5mm jack). SD already mounted. */
+    VoicePlay_Init();
+    VoicePlay_SetVolume(-20);  /* safe listening; range -57..+6 dB */
+
 	while(1)
 	{
+        VoicePlay_Pump();
         emptyFramebuf = get_empty_framebuf();
 
         if (emptyFramebuf)
@@ -666,6 +789,13 @@ int main()
 			auto *req_data = static_cast<uint8_t *>(inputTensor->data.data);
 			auto *signed_req_data = static_cast<int8_t *>(inputTensor->data.data);
 
+            const uint8_t mean_luma = EstimateMeanLumaRgb888(req_data, inputTensor->bytes);
+            const bool low_light_now = (mean_luma < LOW_LIGHT_LUMA_THRESHOLD);
+            fullFramebuf->bLowLight = low_light_now;
+            if (low_light_now) {
+                ApplyLowLightBoostRgb888(req_data, inputTensor->bytes, mean_luma);
+            }
+
 			for (size_t i = 0; i < inputTensor->bytes; i++)
 			{
 //				auto i_data_int8 = static_cast<int8_t>(((static_cast<float>(req_data[i]) / 255.0f) / inQuantParams.scale) + inQuantParams.offset);
@@ -696,17 +826,40 @@ int main()
 
         if (infFramebuf)
         {
+            static std::vector<arm::app::yolov8n_od::DetectionResult> s_lastStableDetections;
+            static uint8_t s_shakeHoldStreak = 0;
+
 			//post process
 
 #if defined(__PROFILE__)
 			u64StartCycle = pmu_get_systick_Count();
 #endif
-			postProcess.RunPostProcessing(
+            auto &postProcess = infFramebuf->bLowLight ? postProcessNight : postProcessDay;
+            postProcess.RunPostProcessing(
 				inputImgCols,
 				inputImgRows,
 				infFramebuf->frameImage.w,
 				infFramebuf->frameImage.h,
 				infFramebuf->results);
+
+            const uint16_t *currRgb565 = (const uint16_t *)infFramebuf->frameImage.data;
+            const float globalMotionRatio = EstimateGlobalMotionRatioRgb565(currRgb565);
+            const bool isCameraShake = (globalMotionRatio >= SHAKE_GLOBAL_MOTION_RATIO_THRESHOLD);
+
+            if (infFramebuf->results.empty()) {
+                if (isCameraShake && !s_lastStableDetections.empty() &&
+                    s_shakeHoldStreak < SHAKE_DETECTION_HOLD_FRAMES) {
+                    /* Keep boxes briefly during shaking frames to avoid one-frame dropouts. */
+                    infFramebuf->results = s_lastStableDetections;
+                    s_shakeHoldStreak++;
+                } else {
+                    s_lastStableDetections.clear();
+                    s_shakeHoldStreak = 0;
+                }
+            } else {
+                s_lastStableDetections = infFramebuf->results;
+                s_shakeHoldStreak = 0;
+            }
 
             g_frame_seq++;
             g_known_best_severity = -1;
@@ -829,11 +982,13 @@ int main()
                         g_unknown_active[z] = 1;
                         printf("[UNKNOWN OBSTACLE] %s\n", g_zone_names[z]);
                         g_unknown_last_print_frame[z] = g_frame_seq;
+                        VoicePlay_Speak(z, -1, 1);
                     } else if (g_unknown_active[z] && g_unknown_exit_streak[z] >= UNKNOWN_EXIT_FRAMES) {
                         g_unknown_active[z] = 0;
                     } else if (g_unknown_active[z] && ((g_frame_seq - g_unknown_last_print_frame[z]) >= UNKNOWN_REPRINT_INTERVAL_FRAMES)) {
                         printf("[UNKNOWN OBSTACLE] %s\n", g_zone_names[z]);
                         g_unknown_last_print_frame[z] = g_frame_seq;
+                        VoicePlay_Speak(z, -1, 1);
                     }
                 }
             }

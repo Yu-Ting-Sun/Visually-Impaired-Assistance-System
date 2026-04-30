@@ -25,12 +25,12 @@
 	.eabi_attribute	14, 0	@ Tag_ABI_PCS_R9_use
 	.file	"clk.c"
 	.file	1 "C:\\Users\\antia" "AppData\\Local\\Keil_v5\\ARM\\ARMCLANG\\bin\\..\\include\\stdint.h"
-	.file	2 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\clk_reg.h"
-	.file	3 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\pmc_reg.h"
-	.file	4 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\fmc_reg.h"
-	.file	5 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\M55M1.h"
-	.file	6 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/CMSIS/Core/Include\\core_cm55.h"
-	.file	7 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\ccap_reg.h"
+	.file	2 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\clk_reg.h"
+	.file	3 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\pmc_reg.h"
+	.file	4 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\fmc_reg.h"
+	.file	5 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\M55M1.h"
+	.file	6 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/CMSIS/Core/Include\\core_cm55.h"
+	.file	7 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\ccap_reg.h"
 	.section	.text.CLK_DisableCKO,"ax",%progbits
 	.hidden	CLK_DisableCKO                  @ -- Begin function CLK_DisableCKO
 	.globl	CLK_DisableCKO
@@ -40,7 +40,7 @@
 	.thumb_func
 CLK_DisableCKO:
 .Lfunc_begin0:
-	.file	8 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/StdDriver/src/clk.c"
+	.file	8 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/StdDriver/src/clk.c"
 	.loc	8 31 0                          @ ../../../../Library/StdDriver/src/clk.c:31:0
 	.fnstart
 	.cfi_sections .debug_frame
@@ -13209,673 +13209,673 @@ CLK_SysTickLongDelay:
 .Linfo_string1:
 	.asciz	"../../../../Library/StdDriver/src\\clk.c" @ string offset=68
 .Linfo_string2:
-	.asciz	"C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" @ string offset=108
+	.asciz	"C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" @ string offset=108
 .Linfo_string3:
-	.asciz	"SRCCTL"                        @ string offset=224
+	.asciz	"SRCCTL"                        @ string offset=226
 .Linfo_string4:
-	.asciz	"unsigned int"                  @ string offset=231
+	.asciz	"unsigned int"                  @ string offset=233
 .Linfo_string5:
-	.asciz	"uint32_t"                      @ string offset=244
+	.asciz	"uint32_t"                      @ string offset=246
 .Linfo_string6:
-	.asciz	"STATUS"                        @ string offset=253
+	.asciz	"STATUS"                        @ string offset=255
 .Linfo_string7:
-	.asciz	"MIRCCTL"                       @ string offset=260
+	.asciz	"MIRCCTL"                       @ string offset=262
 .Linfo_string8:
-	.asciz	"HIRCCTL"                       @ string offset=268
+	.asciz	"HIRCCTL"                       @ string offset=270
 .Linfo_string9:
-	.asciz	"HXTCTL"                        @ string offset=276
+	.asciz	"HXTCTL"                        @ string offset=278
 .Linfo_string10:
-	.asciz	"HIRC48MCTL"                    @ string offset=283
+	.asciz	"HIRC48MCTL"                    @ string offset=285
 .Linfo_string11:
-	.asciz	"APLL0CTL"                      @ string offset=294
+	.asciz	"APLL0CTL"                      @ string offset=296
 .Linfo_string12:
-	.asciz	"APLL0SEL"                      @ string offset=303
+	.asciz	"APLL0SEL"                      @ string offset=305
 .Linfo_string13:
-	.asciz	"APLL1CTL"                      @ string offset=312
+	.asciz	"APLL1CTL"                      @ string offset=314
 .Linfo_string14:
-	.asciz	"APLL1SEL"                      @ string offset=321
+	.asciz	"APLL1SEL"                      @ string offset=323
 .Linfo_string15:
-	.asciz	"CLKOCTL"                       @ string offset=330
+	.asciz	"CLKOCTL"                       @ string offset=332
 .Linfo_string16:
-	.asciz	"RESERVE0"                      @ string offset=338
+	.asciz	"RESERVE0"                      @ string offset=340
 .Linfo_string17:
-	.asciz	"__ARRAY_SIZE_TYPE__"           @ string offset=347
+	.asciz	"__ARRAY_SIZE_TYPE__"           @ string offset=349
 .Linfo_string18:
-	.asciz	"CLKDCTL"                       @ string offset=367
+	.asciz	"CLKDCTL"                       @ string offset=369
 .Linfo_string19:
-	.asciz	"CLKDSTS"                       @ string offset=375
+	.asciz	"CLKDSTS"                       @ string offset=377
 .Linfo_string20:
-	.asciz	"CDUPB"                         @ string offset=383
+	.asciz	"CDUPB"                         @ string offset=385
 .Linfo_string21:
-	.asciz	"CDLOWB"                        @ string offset=389
+	.asciz	"CDLOWB"                        @ string offset=391
 .Linfo_string22:
-	.asciz	"STOPREQ"                       @ string offset=396
+	.asciz	"STOPREQ"                       @ string offset=398
 .Linfo_string23:
-	.asciz	"STOPACK"                       @ string offset=404
+	.asciz	"STOPACK"                       @ string offset=406
 .Linfo_string24:
-	.asciz	"RESERVE1"                      @ string offset=412
+	.asciz	"RESERVE1"                      @ string offset=414
 .Linfo_string25:
-	.asciz	"ACMPCTL"                       @ string offset=421
+	.asciz	"ACMPCTL"                       @ string offset=423
 .Linfo_string26:
-	.asciz	"AWFCTL"                        @ string offset=429
+	.asciz	"AWFCTL"                        @ string offset=431
 .Linfo_string27:
-	.asciz	"BPWMCTL"                       @ string offset=436
+	.asciz	"BPWMCTL"                       @ string offset=438
 .Linfo_string28:
-	.asciz	"CANFDCTL"                      @ string offset=444
+	.asciz	"CANFDCTL"                      @ string offset=446
 .Linfo_string29:
-	.asciz	"CCAPCTL"                       @ string offset=453
+	.asciz	"CCAPCTL"                       @ string offset=455
 .Linfo_string30:
-	.asciz	"CRCCTL"                        @ string offset=461
+	.asciz	"CRCCTL"                        @ string offset=463
 .Linfo_string31:
-	.asciz	"CRYPTOCTL"                     @ string offset=468
+	.asciz	"CRYPTOCTL"                     @ string offset=470
 .Linfo_string32:
-	.asciz	"DACCTL"                        @ string offset=478
+	.asciz	"DACCTL"                        @ string offset=480
 .Linfo_string33:
-	.asciz	"DMICCTL"                       @ string offset=485
+	.asciz	"DMICCTL"                       @ string offset=487
 .Linfo_string34:
-	.asciz	"EADCCTL"                       @ string offset=493
+	.asciz	"EADCCTL"                       @ string offset=495
 .Linfo_string35:
-	.asciz	"EBICTL"                        @ string offset=501
+	.asciz	"EBICTL"                        @ string offset=503
 .Linfo_string36:
-	.asciz	"ECAPCTL"                       @ string offset=508
+	.asciz	"ECAPCTL"                       @ string offset=510
 .Linfo_string37:
-	.asciz	"EMACCTL"                       @ string offset=516
+	.asciz	"EMACCTL"                       @ string offset=518
 .Linfo_string38:
-	.asciz	"EPWMCTL"                       @ string offset=524
+	.asciz	"EPWMCTL"                       @ string offset=526
 .Linfo_string39:
-	.asciz	"EQEICTL"                       @ string offset=532
+	.asciz	"EQEICTL"                       @ string offset=534
 .Linfo_string40:
-	.asciz	"FMCCTL"                        @ string offset=540
+	.asciz	"FMCCTL"                        @ string offset=542
 .Linfo_string41:
-	.asciz	"GDMACTL"                       @ string offset=547
+	.asciz	"GDMACTL"                       @ string offset=549
 .Linfo_string42:
-	.asciz	"GPIOCTL"                       @ string offset=555
+	.asciz	"GPIOCTL"                       @ string offset=557
 .Linfo_string43:
-	.asciz	"HSOTGCTL"                      @ string offset=563
+	.asciz	"HSOTGCTL"                      @ string offset=565
 .Linfo_string44:
-	.asciz	"HSUSBDCTL"                     @ string offset=572
+	.asciz	"HSUSBDCTL"                     @ string offset=574
 .Linfo_string45:
-	.asciz	"HSUSBHCTL"                     @ string offset=582
+	.asciz	"HSUSBHCTL"                     @ string offset=584
 .Linfo_string46:
-	.asciz	"I2CCTL"                        @ string offset=592
+	.asciz	"I2CCTL"                        @ string offset=594
 .Linfo_string47:
-	.asciz	"I2SCTL"                        @ string offset=599
+	.asciz	"I2SCTL"                        @ string offset=601
 .Linfo_string48:
-	.asciz	"I3CCTL"                        @ string offset=606
+	.asciz	"I3CCTL"                        @ string offset=608
 .Linfo_string49:
-	.asciz	"KDFCTL"                        @ string offset=613
+	.asciz	"KDFCTL"                        @ string offset=615
 .Linfo_string50:
-	.asciz	"KPICTL"                        @ string offset=620
+	.asciz	"KPICTL"                        @ string offset=622
 .Linfo_string51:
-	.asciz	"KSCTL"                         @ string offset=627
+	.asciz	"KSCTL"                         @ string offset=629
 .Linfo_string52:
-	.asciz	"LPADCCTL"                      @ string offset=633
+	.asciz	"LPADCCTL"                      @ string offset=635
 .Linfo_string53:
-	.asciz	"LPPDMACTL"                     @ string offset=642
+	.asciz	"LPPDMACTL"                     @ string offset=644
 .Linfo_string54:
-	.asciz	"LPGPIOCTL"                     @ string offset=652
+	.asciz	"LPGPIOCTL"                     @ string offset=654
 .Linfo_string55:
-	.asciz	"LPI2CCTL"                      @ string offset=662
+	.asciz	"LPI2CCTL"                      @ string offset=664
 .Linfo_string56:
-	.asciz	"LPSPICTL"                      @ string offset=671
+	.asciz	"LPSPICTL"                      @ string offset=673
 .Linfo_string57:
-	.asciz	"LPSRAMCTL"                     @ string offset=680
+	.asciz	"LPSRAMCTL"                     @ string offset=682
 .Linfo_string58:
-	.asciz	"LPTMRCTL"                      @ string offset=690
+	.asciz	"LPTMRCTL"                      @ string offset=692
 .Linfo_string59:
-	.asciz	"LPUARTCTL"                     @ string offset=699
+	.asciz	"LPUARTCTL"                     @ string offset=701
 .Linfo_string60:
-	.asciz	"NPUCTL"                        @ string offset=709
+	.asciz	"NPUCTL"                        @ string offset=711
 .Linfo_string61:
-	.asciz	"RESERVE2"                      @ string offset=716
+	.asciz	"RESERVE2"                      @ string offset=718
 .Linfo_string62:
-	.asciz	"OTFCCTL"                       @ string offset=725
+	.asciz	"OTFCCTL"                       @ string offset=727
 .Linfo_string63:
-	.asciz	"OTGCTL"                        @ string offset=733
+	.asciz	"OTGCTL"                        @ string offset=735
 .Linfo_string64:
-	.asciz	"PDMACTL"                       @ string offset=740
+	.asciz	"PDMACTL"                       @ string offset=742
 .Linfo_string65:
-	.asciz	"PSIOCTL"                       @ string offset=748
+	.asciz	"PSIOCTL"                       @ string offset=750
 .Linfo_string66:
-	.asciz	"QSPICTL"                       @ string offset=756
+	.asciz	"QSPICTL"                       @ string offset=758
 .Linfo_string67:
-	.asciz	"RTCCTL"                        @ string offset=764
+	.asciz	"RTCCTL"                        @ string offset=766
 .Linfo_string68:
-	.asciz	"SCCTL"                         @ string offset=771
+	.asciz	"SCCTL"                         @ string offset=773
 .Linfo_string69:
-	.asciz	"SCUCTL"                        @ string offset=777
+	.asciz	"SCUCTL"                        @ string offset=779
 .Linfo_string70:
-	.asciz	"SDHCTL"                        @ string offset=784
+	.asciz	"SDHCTL"                        @ string offset=786
 .Linfo_string71:
-	.asciz	"SPICTL"                        @ string offset=791
+	.asciz	"SPICTL"                        @ string offset=793
 .Linfo_string72:
-	.asciz	"SPIMCTL"                       @ string offset=798
+	.asciz	"SPIMCTL"                       @ string offset=800
 .Linfo_string73:
-	.asciz	"SRAMCTL"                       @ string offset=806
+	.asciz	"SRAMCTL"                       @ string offset=808
 .Linfo_string74:
-	.asciz	"RESERVE3"                      @ string offset=814
+	.asciz	"RESERVE3"                      @ string offset=816
 .Linfo_string75:
-	.asciz	"STCTL"                         @ string offset=823
+	.asciz	"STCTL"                         @ string offset=825
 .Linfo_string76:
-	.asciz	"RESERVE4"                      @ string offset=829
+	.asciz	"RESERVE4"                      @ string offset=831
 .Linfo_string77:
-	.asciz	"TMRCTL"                        @ string offset=838
+	.asciz	"TMRCTL"                        @ string offset=840
 .Linfo_string78:
-	.asciz	"TRNGCTL"                       @ string offset=845
+	.asciz	"TRNGCTL"                       @ string offset=847
 .Linfo_string79:
-	.asciz	"TTMRCTL"                       @ string offset=853
+	.asciz	"TTMRCTL"                       @ string offset=855
 .Linfo_string80:
-	.asciz	"UARTCTL"                       @ string offset=861
+	.asciz	"UARTCTL"                       @ string offset=863
 .Linfo_string81:
-	.asciz	"USBDCTL"                       @ string offset=869
+	.asciz	"USBDCTL"                       @ string offset=871
 .Linfo_string82:
-	.asciz	"USBHCTL"                       @ string offset=877
+	.asciz	"USBHCTL"                       @ string offset=879
 .Linfo_string83:
-	.asciz	"USCICTL"                       @ string offset=885
+	.asciz	"USCICTL"                       @ string offset=887
 .Linfo_string84:
-	.asciz	"UTCPDCTL"                      @ string offset=893
+	.asciz	"UTCPDCTL"                      @ string offset=895
 .Linfo_string85:
-	.asciz	"WDTCTL"                        @ string offset=902
+	.asciz	"WDTCTL"                        @ string offset=904
 .Linfo_string86:
-	.asciz	"WWDTCTL"                       @ string offset=909
+	.asciz	"WWDTCTL"                       @ string offset=911
 .Linfo_string87:
-	.asciz	"RESERVE5"                      @ string offset=917
+	.asciz	"RESERVE5"                      @ string offset=919
 .Linfo_string88:
-	.asciz	"SCLKSEL"                       @ string offset=926
+	.asciz	"SCLKSEL"                       @ string offset=928
 .Linfo_string89:
-	.asciz	"BPWMSEL"                       @ string offset=934
+	.asciz	"BPWMSEL"                       @ string offset=936
 .Linfo_string90:
-	.asciz	"CANFDSEL"                      @ string offset=942
+	.asciz	"CANFDSEL"                      @ string offset=944
 .Linfo_string91:
-	.asciz	"CCAPSEL"                       @ string offset=951
+	.asciz	"CCAPSEL"                       @ string offset=953
 .Linfo_string92:
-	.asciz	"CLKOSEL"                       @ string offset=959
+	.asciz	"CLKOSEL"                       @ string offset=961
 .Linfo_string93:
-	.asciz	"DMICSEL"                       @ string offset=967
+	.asciz	"DMICSEL"                       @ string offset=969
 .Linfo_string94:
-	.asciz	"EADCSEL"                       @ string offset=975
+	.asciz	"EADCSEL"                       @ string offset=977
 .Linfo_string95:
-	.asciz	"EPWMSEL"                       @ string offset=983
+	.asciz	"EPWMSEL"                       @ string offset=985
 .Linfo_string96:
-	.asciz	"FMCSEL"                        @ string offset=991
+	.asciz	"FMCSEL"                        @ string offset=993
 .Linfo_string97:
-	.asciz	"I2SSEL"                        @ string offset=998
+	.asciz	"I2SSEL"                        @ string offset=1000
 .Linfo_string98:
-	.asciz	"I3CSEL"                        @ string offset=1005
+	.asciz	"I3CSEL"                        @ string offset=1007
 .Linfo_string99:
-	.asciz	"KPISEL"                        @ string offset=1012
+	.asciz	"KPISEL"                        @ string offset=1014
 .Linfo_string100:
-	.asciz	"LPADCSEL"                      @ string offset=1019
+	.asciz	"LPADCSEL"                      @ string offset=1021
 .Linfo_string101:
-	.asciz	"LPSPISEL"                      @ string offset=1028
+	.asciz	"LPSPISEL"                      @ string offset=1030
 .Linfo_string102:
-	.asciz	"LPTMRSEL"                      @ string offset=1037
+	.asciz	"LPTMRSEL"                      @ string offset=1039
 .Linfo_string103:
-	.asciz	"LPUARTSEL"                     @ string offset=1046
+	.asciz	"LPUARTSEL"                     @ string offset=1048
 .Linfo_string104:
-	.asciz	"PSIOSEL"                       @ string offset=1056
+	.asciz	"PSIOSEL"                       @ string offset=1058
 .Linfo_string105:
-	.asciz	"QSPISEL"                       @ string offset=1064
+	.asciz	"QSPISEL"                       @ string offset=1066
 .Linfo_string106:
-	.asciz	"SCSEL"                         @ string offset=1072
+	.asciz	"SCSEL"                         @ string offset=1074
 .Linfo_string107:
-	.asciz	"SDHSEL"                        @ string offset=1078
+	.asciz	"SDHSEL"                        @ string offset=1080
 .Linfo_string108:
-	.asciz	"SPISEL"                        @ string offset=1085
+	.asciz	"SPISEL"                        @ string offset=1087
 .Linfo_string109:
-	.asciz	"STSEL"                         @ string offset=1092
+	.asciz	"STSEL"                         @ string offset=1094
 .Linfo_string110:
-	.asciz	"TMRSEL"                        @ string offset=1098
+	.asciz	"TMRSEL"                        @ string offset=1100
 .Linfo_string111:
-	.asciz	"TTMRSEL"                       @ string offset=1105
+	.asciz	"TTMRSEL"                       @ string offset=1107
 .Linfo_string112:
-	.asciz	"UARTSEL0"                      @ string offset=1113
+	.asciz	"UARTSEL0"                      @ string offset=1115
 .Linfo_string113:
-	.asciz	"UARTSEL1"                      @ string offset=1122
+	.asciz	"UARTSEL1"                      @ string offset=1124
 .Linfo_string114:
-	.asciz	"USBSEL"                        @ string offset=1131
+	.asciz	"USBSEL"                        @ string offset=1133
 .Linfo_string115:
-	.asciz	"WDTSEL"                        @ string offset=1138
+	.asciz	"WDTSEL"                        @ string offset=1140
 .Linfo_string116:
-	.asciz	"RESERVE6"                      @ string offset=1145
+	.asciz	"RESERVE6"                      @ string offset=1147
 .Linfo_string117:
-	.asciz	"DLLSEL"                        @ string offset=1154
+	.asciz	"DLLSEL"                        @ string offset=1156
 .Linfo_string118:
-	.asciz	"RESERVE7"                      @ string offset=1161
+	.asciz	"RESERVE7"                      @ string offset=1163
 .Linfo_string119:
-	.asciz	"WWDTSEL"                       @ string offset=1170
+	.asciz	"WWDTSEL"                       @ string offset=1172
 .Linfo_string120:
-	.asciz	"RESERVE8"                      @ string offset=1178
+	.asciz	"RESERVE8"                      @ string offset=1180
 .Linfo_string121:
-	.asciz	"SCLKDIV"                       @ string offset=1187
+	.asciz	"SCLKDIV"                       @ string offset=1189
 .Linfo_string122:
-	.asciz	"RESERVE9"                      @ string offset=1195
+	.asciz	"RESERVE9"                      @ string offset=1197
 .Linfo_string123:
-	.asciz	"HCLKDIV"                       @ string offset=1204
+	.asciz	"HCLKDIV"                       @ string offset=1206
 .Linfo_string124:
-	.asciz	"PCLKDIV"                       @ string offset=1212
+	.asciz	"PCLKDIV"                       @ string offset=1214
 .Linfo_string125:
-	.asciz	"CANFDDIV"                      @ string offset=1220
+	.asciz	"CANFDDIV"                      @ string offset=1222
 .Linfo_string126:
-	.asciz	"DMICDIV"                       @ string offset=1229
+	.asciz	"DMICDIV"                       @ string offset=1231
 .Linfo_string127:
-	.asciz	"EADCDIV"                       @ string offset=1237
+	.asciz	"EADCDIV"                       @ string offset=1239
 .Linfo_string128:
-	.asciz	"I2SDIV"                        @ string offset=1245
+	.asciz	"I2SDIV"                        @ string offset=1247
 .Linfo_string129:
-	.asciz	"KPIDIV"                        @ string offset=1252
+	.asciz	"KPIDIV"                        @ string offset=1254
 .Linfo_string130:
-	.asciz	"LPADCDIV"                      @ string offset=1259
+	.asciz	"LPADCDIV"                      @ string offset=1261
 .Linfo_string131:
-	.asciz	"LPUARTDIV"                     @ string offset=1268
+	.asciz	"LPUARTDIV"                     @ string offset=1270
 .Linfo_string132:
-	.asciz	"PSIODIV"                       @ string offset=1278
+	.asciz	"PSIODIV"                       @ string offset=1280
 .Linfo_string133:
-	.asciz	"SCDIV"                         @ string offset=1286
+	.asciz	"SCDIV"                         @ string offset=1288
 .Linfo_string134:
-	.asciz	"SDHDIV"                        @ string offset=1292
+	.asciz	"SDHDIV"                        @ string offset=1294
 .Linfo_string135:
-	.asciz	"STDIV"                         @ string offset=1299
+	.asciz	"STDIV"                         @ string offset=1301
 .Linfo_string136:
-	.asciz	"UARTDIV0"                      @ string offset=1305
+	.asciz	"UARTDIV0"                      @ string offset=1307
 .Linfo_string137:
-	.asciz	"UARTDIV1"                      @ string offset=1314
+	.asciz	"UARTDIV1"                      @ string offset=1316
 .Linfo_string138:
-	.asciz	"USBDIV"                        @ string offset=1323
+	.asciz	"USBDIV"                        @ string offset=1325
 .Linfo_string139:
-	.asciz	"VSENSEDIV"                     @ string offset=1330
+	.asciz	"VSENSEDIV"                     @ string offset=1332
 .Linfo_string140:
-	.asciz	"CLK_T"                         @ string offset=1340
+	.asciz	"CLK_T"                         @ string offset=1342
 .Linfo_string141:
-	.asciz	"PWRCTL"                        @ string offset=1346
+	.asciz	"PWRCTL"                        @ string offset=1348
 .Linfo_string142:
-	.asciz	"INTEN"                         @ string offset=1353
+	.asciz	"INTEN"                         @ string offset=1355
 .Linfo_string143:
-	.asciz	"INTSTS"                        @ string offset=1359
+	.asciz	"INTSTS"                        @ string offset=1361
 .Linfo_string144:
-	.asciz	"PLCTL"                         @ string offset=1366
+	.asciz	"PLCTL"                         @ string offset=1368
 .Linfo_string145:
-	.asciz	"PLSTS"                         @ string offset=1372
+	.asciz	"PLSTS"                         @ string offset=1374
 .Linfo_string146:
-	.asciz	"IOSHCTL"                       @ string offset=1378
+	.asciz	"IOSHCTL"                       @ string offset=1380
 .Linfo_string147:
-	.asciz	"BATLDCTL"                      @ string offset=1386
+	.asciz	"BATLDCTL"                      @ string offset=1388
 .Linfo_string148:
-	.asciz	"IOTGDBCTL"                     @ string offset=1395
+	.asciz	"IOTGDBCTL"                     @ string offset=1397
 .Linfo_string149:
-	.asciz	"GPATGCTL"                      @ string offset=1405
+	.asciz	"GPATGCTL"                      @ string offset=1407
 .Linfo_string150:
-	.asciz	"GPBTGCTL"                      @ string offset=1414
+	.asciz	"GPBTGCTL"                      @ string offset=1416
 .Linfo_string151:
-	.asciz	"GPCTGCTL"                      @ string offset=1423
+	.asciz	"GPCTGCTL"                      @ string offset=1425
 .Linfo_string152:
-	.asciz	"GPDTGCTL"                      @ string offset=1432
+	.asciz	"GPDTGCTL"                      @ string offset=1434
 .Linfo_string153:
-	.asciz	"STMRWKCTL"                     @ string offset=1441
+	.asciz	"STMRWKCTL"                     @ string offset=1443
 .Linfo_string154:
-	.asciz	"PINWKCTL"                      @ string offset=1451
+	.asciz	"PINWKCTL"                      @ string offset=1453
 .Linfo_string155:
-	.asciz	"SYSRB0PC"                      @ string offset=1460
+	.asciz	"SYSRB0PC"                      @ string offset=1462
 .Linfo_string156:
-	.asciz	"SYSRB1PC"                      @ string offset=1469
+	.asciz	"SYSRB1PC"                      @ string offset=1471
 .Linfo_string157:
-	.asciz	"SYSRB2PC"                      @ string offset=1478
+	.asciz	"SYSRB2PC"                      @ string offset=1480
 .Linfo_string158:
-	.asciz	"SYSRB3PC"                      @ string offset=1487
+	.asciz	"SYSRB3PC"                      @ string offset=1489
 .Linfo_string159:
-	.asciz	"LPSYSRPC"                      @ string offset=1496
+	.asciz	"LPSYSRPC"                      @ string offset=1498
 .Linfo_string160:
-	.asciz	"CCAPRPC"                       @ string offset=1505
+	.asciz	"CCAPRPC"                       @ string offset=1507
 .Linfo_string161:
-	.asciz	"DMICRPC"                       @ string offset=1513
+	.asciz	"DMICRPC"                       @ string offset=1515
 .Linfo_string162:
-	.asciz	"KSRPC"                         @ string offset=1521
+	.asciz	"KSRPC"                         @ string offset=1523
 .Linfo_string163:
-	.asciz	"PMC_T"                         @ string offset=1527
+	.asciz	"PMC_T"                         @ string offset=1529
 .Linfo_string164:
-	.asciz	"ISPCTL"                        @ string offset=1533
+	.asciz	"ISPCTL"                        @ string offset=1535
 .Linfo_string165:
-	.asciz	"ISPADDR"                       @ string offset=1540
+	.asciz	"ISPADDR"                       @ string offset=1542
 .Linfo_string166:
-	.asciz	"ISPDAT"                        @ string offset=1548
+	.asciz	"ISPDAT"                        @ string offset=1550
 .Linfo_string167:
-	.asciz	"ISPCMD"                        @ string offset=1555
+	.asciz	"ISPCMD"                        @ string offset=1557
 .Linfo_string168:
-	.asciz	"ISPTRG"                        @ string offset=1562
+	.asciz	"ISPTRG"                        @ string offset=1564
 .Linfo_string169:
-	.asciz	"RESERVE"                       @ string offset=1569
+	.asciz	"RESERVE"                       @ string offset=1571
 .Linfo_string170:
-	.asciz	"FTCTL"                         @ string offset=1577
+	.asciz	"FTCTL"                         @ string offset=1579
 .Linfo_string171:
-	.asciz	"ICPCTL"                        @ string offset=1583
+	.asciz	"ICPCTL"                        @ string offset=1585
 .Linfo_string172:
-	.asciz	"ISPSTS"                        @ string offset=1590
+	.asciz	"ISPSTS"                        @ string offset=1592
 .Linfo_string173:
-	.asciz	"CYCCTL"                        @ string offset=1597
+	.asciz	"CYCCTL"                        @ string offset=1599
 .Linfo_string174:
-	.asciz	"MPDAT0"                        @ string offset=1604
+	.asciz	"MPDAT0"                        @ string offset=1606
 .Linfo_string175:
-	.asciz	"MPDAT1"                        @ string offset=1611
+	.asciz	"MPDAT1"                        @ string offset=1613
 .Linfo_string176:
-	.asciz	"MPDAT2"                        @ string offset=1618
+	.asciz	"MPDAT2"                        @ string offset=1620
 .Linfo_string177:
-	.asciz	"MPDAT3"                        @ string offset=1625
+	.asciz	"MPDAT3"                        @ string offset=1627
 .Linfo_string178:
-	.asciz	"MPSTS"                         @ string offset=1632
+	.asciz	"MPSTS"                         @ string offset=1634
 .Linfo_string179:
-	.asciz	"MPADDR"                        @ string offset=1638
+	.asciz	"MPADDR"                        @ string offset=1640
 .Linfo_string180:
-	.asciz	"XOMR0STS"                      @ string offset=1645
+	.asciz	"XOMR0STS"                      @ string offset=1647
 .Linfo_string181:
-	.asciz	"XOMR1STS"                      @ string offset=1654
+	.asciz	"XOMR1STS"                      @ string offset=1656
 .Linfo_string182:
-	.asciz	"XOMR2STS"                      @ string offset=1663
+	.asciz	"XOMR2STS"                      @ string offset=1665
 .Linfo_string183:
-	.asciz	"XOMR3STS"                      @ string offset=1672
+	.asciz	"XOMR3STS"                      @ string offset=1674
 .Linfo_string184:
-	.asciz	"XOMSTS"                        @ string offset=1681
+	.asciz	"XOMSTS"                        @ string offset=1683
 .Linfo_string185:
-	.asciz	"APWPROT"                       @ string offset=1688
+	.asciz	"APWPROT"                       @ string offset=1690
 .Linfo_string186:
-	.asciz	"APWPROT0"                      @ string offset=1696
+	.asciz	"APWPROT0"                      @ string offset=1698
 .Linfo_string187:
-	.asciz	"APWPROT1"                      @ string offset=1705
+	.asciz	"APWPROT1"                      @ string offset=1707
 .Linfo_string188:
-	.asciz	"APWPKEEP"                      @ string offset=1714
+	.asciz	"APWPKEEP"                      @ string offset=1716
 .Linfo_string189:
-	.asciz	"SCACT"                         @ string offset=1723
+	.asciz	"SCACT"                         @ string offset=1725
 .Linfo_string190:
-	.asciz	"FMC_T"                         @ string offset=1729
+	.asciz	"FMC_T"                         @ string offset=1731
 .Linfo_string191:
-	.asciz	"vu32"                          @ string offset=1735
+	.asciz	"vu32"                          @ string offset=1737
 .Linfo_string192:
-	.asciz	"CTRL"                          @ string offset=1740
+	.asciz	"CTRL"                          @ string offset=1742
 .Linfo_string193:
-	.asciz	"LOAD"                          @ string offset=1745
+	.asciz	"LOAD"                          @ string offset=1747
 .Linfo_string194:
-	.asciz	"VAL"                           @ string offset=1750
+	.asciz	"VAL"                           @ string offset=1752
 .Linfo_string195:
-	.asciz	"CALIB"                         @ string offset=1754
+	.asciz	"CALIB"                         @ string offset=1756
 .Linfo_string196:
-	.asciz	"SysTick_Type"                  @ string offset=1760
+	.asciz	"SysTick_Type"                  @ string offset=1762
 .Linfo_string197:
-	.asciz	"CTL"                           @ string offset=1773
+	.asciz	"CTL"                           @ string offset=1775
 .Linfo_string198:
-	.asciz	"PAR"                           @ string offset=1777
+	.asciz	"PAR"                           @ string offset=1779
 .Linfo_string199:
-	.asciz	"PARM"                          @ string offset=1781
+	.asciz	"PARM"                          @ string offset=1783
 .Linfo_string200:
-	.asciz	"CWSP"                          @ string offset=1786
+	.asciz	"CWSP"                          @ string offset=1788
 .Linfo_string201:
-	.asciz	"CWS"                           @ string offset=1791
+	.asciz	"CWS"                           @ string offset=1793
 .Linfo_string202:
-	.asciz	"PKTSL"                         @ string offset=1795
+	.asciz	"PKTSL"                         @ string offset=1797
 .Linfo_string203:
-	.asciz	"PLNSL"                         @ string offset=1801
+	.asciz	"PLNSL"                         @ string offset=1803
 .Linfo_string204:
-	.asciz	"FRCTL"                         @ string offset=1807
+	.asciz	"FRCTL"                         @ string offset=1809
 .Linfo_string205:
-	.asciz	"STRIDE"                        @ string offset=1813
+	.asciz	"STRIDE"                        @ string offset=1815
 .Linfo_string206:
-	.asciz	"FIFOTH"                        @ string offset=1820
+	.asciz	"FIFOTH"                        @ string offset=1822
 .Linfo_string207:
-	.asciz	"CMPADDR"                       @ string offset=1827
+	.asciz	"CMPADDR"                       @ string offset=1829
 .Linfo_string208:
-	.asciz	"LUMA_Y1_THD"                   @ string offset=1835
+	.asciz	"LUMA_Y1_THD"                   @ string offset=1837
 .Linfo_string209:
-	.asciz	"PKTSM"                         @ string offset=1847
+	.asciz	"PKTSM"                         @ string offset=1849
 .Linfo_string210:
-	.asciz	"PLNSM"                         @ string offset=1853
+	.asciz	"PLNSM"                         @ string offset=1855
 .Linfo_string211:
-	.asciz	"CURADDRP"                      @ string offset=1859
+	.asciz	"CURADDRP"                      @ string offset=1861
 .Linfo_string212:
-	.asciz	"CURADDRY"                      @ string offset=1868
+	.asciz	"CURADDRY"                      @ string offset=1870
 .Linfo_string213:
-	.asciz	"CURADDRU"                      @ string offset=1877
+	.asciz	"CURADDRU"                      @ string offset=1879
 .Linfo_string214:
-	.asciz	"CURADDRV"                      @ string offset=1886
+	.asciz	"CURADDRV"                      @ string offset=1888
 .Linfo_string215:
-	.asciz	"PKTBA0"                        @ string offset=1895
+	.asciz	"PKTBA0"                        @ string offset=1897
 .Linfo_string216:
-	.asciz	"YBA"                           @ string offset=1902
+	.asciz	"YBA"                           @ string offset=1904
 .Linfo_string217:
-	.asciz	"UBA"                           @ string offset=1906
+	.asciz	"UBA"                           @ string offset=1908
 .Linfo_string218:
-	.asciz	"VBA"                           @ string offset=1910
+	.asciz	"VBA"                           @ string offset=1912
 .Linfo_string219:
-	.asciz	"MDCTL"                         @ string offset=1914
+	.asciz	"MDCTL"                         @ string offset=1916
 .Linfo_string220:
-	.asciz	"MDTRG_WK"                      @ string offset=1920
+	.asciz	"MDTRG_WK"                      @ string offset=1922
 .Linfo_string221:
-	.asciz	"MDTTH"                         @ string offset=1929
+	.asciz	"MDTTH"                         @ string offset=1931
 .Linfo_string222:
-	.asciz	"MDTSAD"                        @ string offset=1935
+	.asciz	"MDTSAD"                        @ string offset=1937
 .Linfo_string223:
-	.asciz	"MDWOCTH"                       @ string offset=1942
+	.asciz	"MDWOCTH"                       @ string offset=1944
 .Linfo_string224:
-	.asciz	"MDWOC"                         @ string offset=1950
+	.asciz	"MDWOC"                         @ string offset=1952
 .Linfo_string225:
-	.asciz	"MDWTH"                         @ string offset=1956
+	.asciz	"MDWTH"                         @ string offset=1958
 .Linfo_string226:
-	.asciz	"MDWSAD"                        @ string offset=1962
+	.asciz	"MDWSAD"                        @ string offset=1964
 .Linfo_string227:
-	.asciz	"CCAP_T"                        @ string offset=1969
+	.asciz	"CCAP_T"                        @ string offset=1971
 .Linfo_string228:
-	.asciz	"CLK_DisableMIRC"               @ string offset=1976
+	.asciz	"CLK_DisableMIRC"               @ string offset=1978
 .Linfo_string229:
-	.asciz	"CLK_WaitClockReady"            @ string offset=1992
+	.asciz	"CLK_WaitClockReady"            @ string offset=1994
 .Linfo_string230:
-	.asciz	"u32ClkMask"                    @ string offset=2011
+	.asciz	"u32ClkMask"                    @ string offset=2013
 .Linfo_string231:
-	.asciz	"u32Ret"                        @ string offset=2022
+	.asciz	"u32Ret"                        @ string offset=2024
 .Linfo_string232:
-	.asciz	"u32TimeOutCnt"                 @ string offset=2029
+	.asciz	"u32TimeOutCnt"                 @ string offset=2031
 .Linfo_string233:
-	.asciz	"CLK_GetMIRCFreq"               @ string offset=2043
+	.asciz	"CLK_GetMIRCFreq"               @ string offset=2045
 .Linfo_string234:
-	.asciz	"u32Freq"                       @ string offset=2059
+	.asciz	"u32Freq"                       @ string offset=2061
 .Linfo_string235:
-	.asciz	"CLK_GetHCLK0Freq"              @ string offset=2067
+	.asciz	"CLK_GetHCLK0Freq"              @ string offset=2069
 .Linfo_string236:
-	.asciz	"u32Hclk0"                      @ string offset=2084
+	.asciz	"u32Hclk0"                      @ string offset=2086
 .Linfo_string237:
-	.asciz	"CLK_GetHCLK2Freq"              @ string offset=2093
+	.asciz	"CLK_GetHCLK2Freq"              @ string offset=2095
 .Linfo_string238:
-	.asciz	"u32SclkFreq"                   @ string offset=2110
+	.asciz	"u32SclkFreq"                   @ string offset=2112
 .Linfo_string239:
-	.asciz	"u32Hclk2Div"                   @ string offset=2122
+	.asciz	"u32Hclk2Div"                   @ string offset=2124
 .Linfo_string240:
-	.asciz	"u32Hclk2"                      @ string offset=2134
+	.asciz	"u32Hclk2"                      @ string offset=2136
 .Linfo_string241:
-	.asciz	"CLK_GetACLKFreq"               @ string offset=2143
+	.asciz	"CLK_GetACLKFreq"               @ string offset=2145
 .Linfo_string242:
-	.asciz	"CLK_GetAPLL0ClockFreq"         @ string offset=2159
+	.asciz	"CLK_GetAPLL0ClockFreq"         @ string offset=2161
 .Linfo_string243:
-	.asciz	"u32PllFreq"                    @ string offset=2181
+	.asciz	"u32PllFreq"                    @ string offset=2183
 .Linfo_string244:
-	.asciz	"u32PllReg"                     @ string offset=2192
+	.asciz	"u32PllReg"                     @ string offset=2194
 .Linfo_string245:
-	.asciz	"u32PllReg1"                    @ string offset=2202
+	.asciz	"u32PllReg1"                    @ string offset=2204
 .Linfo_string246:
-	.asciz	"u32FIN"                        @ string offset=2213
+	.asciz	"u32FIN"                        @ string offset=2215
 .Linfo_string247:
-	.asciz	"u32NO"                         @ string offset=2220
+	.asciz	"u32NO"                         @ string offset=2222
 .Linfo_string248:
-	.asciz	"u32NF"                         @ string offset=2226
+	.asciz	"u32NF"                         @ string offset=2228
 .Linfo_string249:
-	.asciz	"u32NR"                         @ string offset=2232
+	.asciz	"u32NR"                         @ string offset=2234
 .Linfo_string250:
-	.asciz	"u32FRDIV"                      @ string offset=2238
+	.asciz	"u32FRDIV"                      @ string offset=2240
 .Linfo_string251:
-	.asciz	"au8NoTbl"                      @ string offset=2247
+	.asciz	"au8NoTbl"                      @ string offset=2249
 .Linfo_string252:
-	.asciz	"unsigned char"                 @ string offset=2256
+	.asciz	"unsigned char"                 @ string offset=2258
 .Linfo_string253:
-	.asciz	"uint8_t"                       @ string offset=2270
+	.asciz	"uint8_t"                       @ string offset=2272
 .Linfo_string254:
-	.asciz	"CLK_DisableAPLL"               @ string offset=2278
+	.asciz	"CLK_DisableAPLL"               @ string offset=2280
 .Linfo_string255:
-	.asciz	"u32PllSelect"                  @ string offset=2294
+	.asciz	"u32PllSelect"                  @ string offset=2296
 .Linfo_string256:
-	.asciz	"CLK_EnableXtalRC"              @ string offset=2307
+	.asciz	"CLK_EnableXtalRC"              @ string offset=2309
 .Linfo_string257:
-	.asciz	"CLK_DisableCKO"                @ string offset=2324
+	.asciz	"CLK_DisableCKO"                @ string offset=2326
 .Linfo_string258:
-	.asciz	"CLK_EnableCKO"                 @ string offset=2339
+	.asciz	"CLK_EnableCKO"                 @ string offset=2341
 .Linfo_string259:
-	.asciz	"CLK_GetHXTFreq"                @ string offset=2353
+	.asciz	"CLK_GetHXTFreq"                @ string offset=2355
 .Linfo_string260:
-	.asciz	"CLK_GetLXTFreq"                @ string offset=2368
+	.asciz	"CLK_GetLXTFreq"                @ string offset=2370
 .Linfo_string261:
-	.asciz	"CLK_EnableMIRC"                @ string offset=2383
+	.asciz	"CLK_EnableMIRC"                @ string offset=2385
 .Linfo_string262:
-	.asciz	"CLK_GetPCLK0Freq"              @ string offset=2398
+	.asciz	"CLK_GetPCLK0Freq"              @ string offset=2400
 .Linfo_string263:
-	.asciz	"CLK_GetPCLK1Freq"              @ string offset=2415
+	.asciz	"CLK_GetPCLK1Freq"              @ string offset=2417
 .Linfo_string264:
-	.asciz	"CLK_GetPCLK2Freq"              @ string offset=2432
+	.asciz	"CLK_GetPCLK2Freq"              @ string offset=2434
 .Linfo_string265:
-	.asciz	"CLK_GetPCLK3Freq"              @ string offset=2449
+	.asciz	"CLK_GetPCLK3Freq"              @ string offset=2451
 .Linfo_string266:
-	.asciz	"CLK_GetPCLK4Freq"              @ string offset=2466
+	.asciz	"CLK_GetPCLK4Freq"              @ string offset=2468
 .Linfo_string267:
-	.asciz	"CLK_GetPCLK5Freq"              @ string offset=2483
+	.asciz	"CLK_GetPCLK5Freq"              @ string offset=2485
 .Linfo_string268:
-	.asciz	"CLK_GetSCLKFreq"               @ string offset=2500
+	.asciz	"CLK_GetSCLKFreq"               @ string offset=2502
 .Linfo_string269:
-	.asciz	"CLK_SystemClockUpdate"         @ string offset=2516
+	.asciz	"CLK_SystemClockUpdate"         @ string offset=2518
 .Linfo_string270:
-	.asciz	"CLK_GetHCLK1Freq"              @ string offset=2538
+	.asciz	"CLK_GetHCLK1Freq"              @ string offset=2540
 .Linfo_string271:
-	.asciz	"CLK_SetCoreClock"              @ string offset=2555
+	.asciz	"CLK_SetCoreClock"              @ string offset=2557
 .Linfo_string272:
-	.asciz	"CLK_EnableAPLL"                @ string offset=2572
+	.asciz	"CLK_EnableAPLL"                @ string offset=2574
 .Linfo_string273:
-	.asciz	"CLK_SetSCLK"                   @ string offset=2587
+	.asciz	"CLK_SetSCLK"                   @ string offset=2589
 .Linfo_string274:
-	.asciz	"CLK_SetModuleClock"            @ string offset=2599
+	.asciz	"CLK_SetModuleClock"            @ string offset=2601
 .Linfo_string275:
-	.asciz	"CLK_SetSysTickClockSrc"        @ string offset=2618
+	.asciz	"CLK_SetSysTickClockSrc"        @ string offset=2620
 .Linfo_string276:
-	.asciz	"CLK_DisableXtalRC"             @ string offset=2641
+	.asciz	"CLK_DisableXtalRC"             @ string offset=2643
 .Linfo_string277:
-	.asciz	"CLK_EnableModuleClock"         @ string offset=2659
+	.asciz	"CLK_EnableModuleClock"         @ string offset=2661
 .Linfo_string278:
-	.asciz	"CLK_DisableModuleClock"        @ string offset=2681
+	.asciz	"CLK_DisableModuleClock"        @ string offset=2683
 .Linfo_string279:
-	.asciz	"CLK_WaitClockDisable"          @ string offset=2704
+	.asciz	"CLK_WaitClockDisable"          @ string offset=2706
 .Linfo_string280:
-	.asciz	"CLK_EnableSysTick"             @ string offset=2725
+	.asciz	"CLK_EnableSysTick"             @ string offset=2727
 .Linfo_string281:
-	.asciz	"CLK_DisableSysTick"            @ string offset=2743
+	.asciz	"CLK_DisableSysTick"            @ string offset=2745
 .Linfo_string282:
-	.asciz	"CLK_GetAPLL1ClockFreq"         @ string offset=2762
+	.asciz	"CLK_GetAPLL1ClockFreq"         @ string offset=2764
 .Linfo_string283:
-	.asciz	"CLK_GetModuleClockSource"      @ string offset=2784
+	.asciz	"CLK_GetModuleClockSource"      @ string offset=2786
 .Linfo_string284:
-	.asciz	"CLK_GetModuleClockDivider"     @ string offset=2809
+	.asciz	"CLK_GetModuleClockDivider"     @ string offset=2811
 .Linfo_string285:
-	.asciz	"CLK_SetBusClock"               @ string offset=2835
+	.asciz	"CLK_SetBusClock"               @ string offset=2837
 .Linfo_string286:
-	.asciz	"CLK_SysTickDelay"              @ string offset=2851
+	.asciz	"CLK_SysTickDelay"              @ string offset=2853
 .Linfo_string287:
-	.asciz	"CLK_SysTickLongDelay"          @ string offset=2868
+	.asciz	"CLK_SysTickLongDelay"          @ string offset=2870
 .Linfo_string288:
-	.asciz	"u32ClkSrc"                     @ string offset=2889
+	.asciz	"u32ClkSrc"                     @ string offset=2891
 .Linfo_string289:
-	.asciz	"u32ClkDiv"                     @ string offset=2899
+	.asciz	"u32ClkDiv"                     @ string offset=2901
 .Linfo_string290:
-	.asciz	"u32ClkDivBy1En"                @ string offset=2909
+	.asciz	"u32ClkDivBy1En"                @ string offset=2911
 .Linfo_string291:
-	.asciz	"u32MircFreq"                   @ string offset=2924
+	.asciz	"u32MircFreq"                   @ string offset=2926
 .Linfo_string292:
-	.asciz	"u32Hclk0Freq"                  @ string offset=2936
+	.asciz	"u32Hclk0Freq"                  @ string offset=2938
 .Linfo_string293:
-	.asciz	"u32Hclk1Freq"                  @ string offset=2949
+	.asciz	"u32Hclk1Freq"                  @ string offset=2951
 .Linfo_string294:
-	.asciz	"u32Hclk2Freq"                  @ string offset=2962
+	.asciz	"u32Hclk2Freq"                  @ string offset=2964
 .Linfo_string295:
-	.asciz	"u32Hclk3Freq"                  @ string offset=2975
+	.asciz	"u32Hclk3Freq"                  @ string offset=2977
 .Linfo_string296:
-	.asciz	"u32Hclk4Freq"                  @ string offset=2988
+	.asciz	"u32Hclk4Freq"                  @ string offset=2990
 .Linfo_string297:
-	.asciz	"SystemClock"                   @ string offset=3001
+	.asciz	"SystemClock"                   @ string offset=3003
 .Linfo_string298:
-	.asciz	"u32SclkDiv"                    @ string offset=3013
+	.asciz	"u32SclkDiv"                    @ string offset=3015
 .Linfo_string299:
-	.asciz	"gau32ClkSrcTbl"                @ string offset=3024
+	.asciz	"gau32ClkSrcTbl"                @ string offset=3026
 .Linfo_string300:
-	.asciz	"u32Hclk1"                      @ string offset=3039
+	.asciz	"u32Hclk1"                      @ string offset=3041
 .Linfo_string301:
-	.asciz	"u32Aclk"                       @ string offset=3048
+	.asciz	"u32Aclk"                       @ string offset=3050
 .Linfo_string302:
-	.asciz	"u32HIRCSTB"                    @ string offset=3056
+	.asciz	"u32HIRCSTB"                    @ string offset=3058
 .Linfo_string303:
-	.asciz	"u32TimeOutCount"               @ string offset=3067
+	.asciz	"u32TimeOutCount"               @ string offset=3069
 .Linfo_string304:
-	.asciz	"u32PllClkSrc"                  @ string offset=3083
+	.asciz	"u32PllClkSrc"                  @ string offset=3085
 .Linfo_string305:
-	.asciz	"u32StableSel"                  @ string offset=3096
+	.asciz	"u32StableSel"                  @ string offset=3098
 .Linfo_string306:
-	.asciz	"u32PllSrcClk"                  @ string offset=3109
+	.asciz	"u32PllSrcClk"                  @ string offset=3111
 .Linfo_string307:
-	.asciz	"u32BestFreq"                   @ string offset=3122
+	.asciz	"u32BestFreq"                   @ string offset=3124
 .Linfo_string308:
-	.asciz	"u32MinFRDIV"                   @ string offset=3134
+	.asciz	"u32MinFRDIV"                   @ string offset=3136
 .Linfo_string309:
-	.asciz	"u32MinNF"                      @ string offset=3146
+	.asciz	"u32MinNF"                      @ string offset=3148
 .Linfo_string310:
-	.asciz	"u32MinNR"                      @ string offset=3155
+	.asciz	"u32MinNR"                      @ string offset=3157
 .Linfo_string311:
-	.asciz	"u32Min"                        @ string offset=3164
+	.asciz	"u32Min"                        @ string offset=3166
 .Linfo_string312:
-	.asciz	"u32Tmp3"                       @ string offset=3171
+	.asciz	"u32Tmp3"                       @ string offset=3173
 .Linfo_string313:
-	.asciz	"u32Tmp4"                       @ string offset=3179
+	.asciz	"u32Tmp4"                       @ string offset=3181
 .Linfo_string314:
-	.asciz	"u32Tmp"                        @ string offset=3187
+	.asciz	"u32Tmp"                        @ string offset=3189
 .Linfo_string315:
-	.asciz	"u32PllClk"                     @ string offset=3194
+	.asciz	"u32PllClk"                     @ string offset=3196
 .Linfo_string316:
-	.asciz	"u32Tmp2"                       @ string offset=3204
+	.asciz	"u32Tmp2"                       @ string offset=3206
 .Linfo_string317:
-	.asciz	"u32MaxFreq"                    @ string offset=3212
+	.asciz	"u32MaxFreq"                    @ string offset=3214
 .Linfo_string318:
-	.asciz	"u64ModuleIdx"                  @ string offset=3223
+	.asciz	"u64ModuleIdx"                  @ string offset=3225
 .Linfo_string319:
-	.asciz	"unsigned long long"            @ string offset=3236
+	.asciz	"unsigned long long"            @ string offset=3238
 .Linfo_string320:
-	.asciz	"uint64_t"                      @ string offset=3255
+	.asciz	"uint64_t"                      @ string offset=3257
 .Linfo_string321:
-	.asciz	"u32Div"                        @ string offset=3264
+	.asciz	"u32Div"                        @ string offset=3266
 .Linfo_string322:
-	.asciz	"u32Sel"                        @ string offset=3271
+	.asciz	"u32Sel"                        @ string offset=3273
 .Linfo_string323:
-	.asciz	"u32TmpVal"                     @ string offset=3278
+	.asciz	"u32TmpVal"                     @ string offset=3280
 .Linfo_string324:
-	.asciz	"u32TmpAddr"                    @ string offset=3288
+	.asciz	"u32TmpAddr"                    @ string offset=3290
 .Linfo_string325:
-	.asciz	"u32Count"                      @ string offset=3299
+	.asciz	"u32Count"                      @ string offset=3301
 .Linfo_string326:
-	.asciz	"u32DivVal"                     @ string offset=3308
+	.asciz	"u32DivVal"                     @ string offset=3310
 .Linfo_string327:
-	.asciz	"u32DivAddr"                    @ string offset=3318
+	.asciz	"u32DivAddr"                    @ string offset=3320
 .Linfo_string328:
-	.asciz	"u32SCLKSrc"                    @ string offset=3329
+	.asciz	"u32SCLKSrc"                    @ string offset=3331
 .Linfo_string329:
-	.asciz	"us"                            @ string offset=3340
+	.asciz	"us"                            @ string offset=3342
 .Linfo_string330:
-	.asciz	"u32DelayCycles"                @ string offset=3343
+	.asciz	"u32DelayCycles"                @ string offset=3345
 .Linfo_string331:
-	.asciz	"u32TargetInt"                  @ string offset=3358
+	.asciz	"u32TargetInt"                  @ string offset=3360
 .Linfo_string332:
-	.asciz	"u32TargetRem"                  @ string offset=3371
+	.asciz	"u32TargetRem"                  @ string offset=3373
 .Linfo_string333:
-	.asciz	"SysTickValue"                  @ string offset=3384
+	.asciz	"SysTickValue"                  @ string offset=3386
 .Linfo_string334:
-	.asciz	"u32TargetValue"                @ string offset=3397
+	.asciz	"u32TargetValue"                @ string offset=3399
 .Linfo_string335:
-	.asciz	"u32Delay"                      @ string offset=3412
+	.asciz	"u32Delay"                      @ string offset=3414
 	.ident	"Component: Arm Compiler for Embedded 6.24 Tool: armclang [5f371800]"
 	.section	".note.GNU-stack","",%progbits
 	.eabi_attribute	30, 1	@ Tag_ABI_optimization_goals

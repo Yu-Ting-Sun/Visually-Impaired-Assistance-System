@@ -519,7 +519,7 @@ using ::strlen __attribute__((__using_if_exists__));
 # 102 "C:\\Users\\antia\\AppData\\Local\\Keil_v5\\ARM\\ARMCLANG\\bin\\..\\include\\libcxx\\cstring" 3
 #pragma clang diagnostic pop
 # 11 "../main.cpp" 2
-# 24 "../main.cpp"
+# 29 "../main.cpp"
 __attribute__((section(".bss.vram.data"), aligned(32))) static uint8_t prev_frame[80 * 60];
 static bool prev_frame_valid = false;
 static uint32_t g_frame_seq = 0;
@@ -536,13 +536,13 @@ static float g_known_best_area_ratio = 0.0f;
 # 1 "..\\BoardInit.hpp" 1
 # 18 "..\\BoardInit.hpp"
 int BoardInit(void);
-# 38 "../main.cpp" 2
+# 43 "../main.cpp" 2
 
 # 1 "../../../../ThirdParty/ml-embedded-evaluation-kit/source/application/main/include\\BufAttributes.hpp" 1
 # 23 "../../../../ThirdParty/ml-embedded-evaluation-kit/source/application/main/include\\BufAttributes.hpp"
 # 1 "../NPU/include\\ethosu_mem_config.h" 1
 # 24 "../../../../ThirdParty/ml-embedded-evaluation-kit/source/application/main/include\\BufAttributes.hpp" 2
-# 40 "../main.cpp" 2
+# 45 "../main.cpp" 2
 # 1 "../Model/include\\YOLOv8nODModel.hpp" 1
 # 12 "../Model/include\\YOLOv8nODModel.hpp"
 # 1 "../../../../ThirdParty/ml-embedded-evaluation-kit/source/application/api/common/include\\Model.hpp" 1
@@ -114368,7 +114368,7 @@ private:
 
 }
 }
-# 41 "../main.cpp" 2
+# 46 "../main.cpp" 2
 # 1 "..\\YOLOv8nODPostProcessing.hpp" 1
 
 
@@ -115727,11 +115727,46 @@ private:
 }
 }
 }
-# 42 "../main.cpp" 2
+# 47 "../main.cpp" 2
 # 1 "../Model/include\\Labels.hpp" 1
 # 35 "../Model/include\\Labels.hpp"
 extern bool GetLabelsVector(std::vector<std::string> &labels);
-# 43 "../main.cpp" 2
+# 48 "../main.cpp" 2
+# 1 "..\\VoicePlayer.hpp" 1
+# 19 "..\\VoicePlayer.hpp"
+extern "C" {
+
+
+
+
+
+
+int VoicePlay_Init(void);
+
+
+void VoicePlay_Pump(void);
+
+
+
+
+void VoicePlay_Speak(int dir, int class_id, int severity);
+
+
+void VoicePlay_StopAll(void);
+
+
+int VoicePlay_IsBusy(void);
+
+
+void VoicePlay_TestFile(const char *path);
+
+
+
+void VoicePlay_SetVolume(int db);
+
+
+}
+# 49 "../main.cpp" 2
 
 # 1 "../../../../ThirdParty/openmv/omv/imlib\\imlib.h" 1
 # 14 "../../../../ThirdParty/openmv/omv/imlib\\imlib.h"
@@ -142655,7 +142690,7 @@ void imlib_nvt_RGB_blend(image_t *src0, image_t *src1, image_t *dst, float alpha
 
 
 }
-# 45 "../main.cpp" 2
+# 51 "../main.cpp" 2
 # 1 "../../../../ThirdParty/openmv/omv/imlib\\framebuffer.h" 1
 # 15 "../../../../ThirdParty/openmv/omv/imlib\\framebuffer.h"
 # 1 "../../../../ThirdParty/openmv/omv/common\\mutex.h" 1
@@ -142787,7 +142822,7 @@ char *framebuffer_get_buffers_end();
 
 
 }
-# 46 "../main.cpp" 2
+# 52 "../main.cpp" 2
 # 1 "..\\ModelFileReader.h" 1
 # 13 "..\\ModelFileReader.h"
 extern "C"
@@ -142844,7 +142879,7 @@ ModelFileReader_Rewind(VOID);
 
 
 }
-# 47 "../main.cpp" 2
+# 53 "../main.cpp" 2
 # 1 "../../../../ThirdParty/FatFs/source\\ff.h" 1
 # 26 "../../../../ThirdParty/FatFs/source\\ff.h"
 extern "C" {
@@ -143070,7 +143105,7 @@ WCHAR ff_uni2oem (DWORD uni, WORD cp);
 DWORD ff_wtoupper (DWORD uni);
 # 432 "../../../../ThirdParty/FatFs/source\\ff.h"
 }
-# 48 "../main.cpp" 2
+# 54 "../main.cpp" 2
 
 
 # 1 "../../../../Library/Device/Nuvoton/M55M1/Include\\NuMicro.h" 1
@@ -154918,7 +154953,7 @@ void WWDT_Open(WWDT_T *wwdt, uint32_t u32PreScale, uint32_t u32CmpValue, uint32_
 
 }
 # 15 "../../../../Library/Device/Nuvoton/M55M1/Include\\NuMicro.h" 2
-# 51 "../main.cpp" 2
+# 57 "../main.cpp" 2
 
 
 
@@ -155064,7 +155099,7 @@ namespace app {
 
 }
 }
-# 58 "../main.cpp" 2
+# 64 "../main.cpp" 2
 
 
 # 1 "../Device/include\\ImageSensor.h" 1
@@ -155134,7 +155169,7 @@ int ImageSensor_WaitCaptureDone(void);
 
 
 }
-# 61 "../main.cpp" 2
+# 67 "../main.cpp" 2
 
 
 
@@ -155185,7 +155220,7 @@ extern uint8_t Font8x16[];
 
 
 }
-# 69 "../main.cpp" 2
+# 75 "../main.cpp" 2
 
 
 
@@ -214415,7 +214450,7 @@ private:
  vector<STrack> removed_stracks;
  byte_kalman::KalmanFilter kalman_filter;
 };
-# 77 "../main.cpp" 2
+# 83 "../main.cpp" 2
 
 # 1 "../../../../ThirdParty/ml-embedded-evaluation-kit/source/log/include\\log_macros.h" 1
 # 21 "../../../../ThirdParty/ml-embedded-evaluation-kit/source/log/include\\log_macros.h"
@@ -214426,14 +214461,8 @@ extern "C" {
 # 25 "../../../../ThirdParty/ml-embedded-evaluation-kit/source/log/include\\log_macros.h" 2
 # 70 "../../../../ThirdParty/ml-embedded-evaluation-kit/source/log/include\\log_macros.h"
 }
-# 79 "../main.cpp" 2
-
-
-
-
-
-
-
+# 85 "../main.cpp" 2
+# 96 "../main.cpp"
 typedef enum
 {
     eFRAMEBUF_EMPTY,
@@ -214446,6 +214475,7 @@ typedef struct
     E_FRAMEBUF_STATE eState;
     image_t frameImage;
     std::vector<arm::app::yolov8n_od::DetectionResult> results;
+    bool bLowLight;
 } S_FRAMEBUF;
 
 
@@ -214500,7 +214530,7 @@ static S_FRAMEBUF *get_inf_framebuf()
 
     return 0;
 }
-# 183 "../main.cpp"
+# 194 "../main.cpp"
 __attribute__((section(".bss.vram.data"), aligned(32))) static char fb_array[((320 * 240 * 2) + 1024) + (1*1024)];
 __attribute__((section(".bss.vram.data"), aligned(32))) static char jpeg_array[(1*1024)];
 
@@ -214536,6 +214566,7 @@ static void omv_init()
     for (i = 0 ; i < 2; i++)
     {
         s_asFramebuf[i].eState = eFRAMEBUF_EMPTY;
+        s_asFramebuf[i].bLowLight = false;
     }
 
     framebuffer_init_image(&s_asFramebuf[0].frameImage);
@@ -214573,11 +214604,93 @@ static inline int GetDirectionIndex(float bbox_center_x, float img_w)
 
 static inline int GetDangerSeverity(float bbox_area_ratio)
 {
-    if (bbox_area_ratio > 0.15f)
+    if (bbox_area_ratio > 0.10f)
         return 2;
-    if (bbox_area_ratio > 0.05f)
+    if (bbox_area_ratio > 0.03f)
         return 1;
     return 0;
+}
+
+static inline uint8_t ClampU8(int value)
+{
+    if (value < 0) return 0;
+    if (value > 255) return 255;
+    return (uint8_t)value;
+}
+
+
+static uint8_t EstimateMeanLumaRgb888(const uint8_t *rgb, size_t bytes)
+{
+    if (!rgb || bytes < 3)
+        return 255;
+
+    const size_t pixels = bytes / 3;
+    const size_t target_samples = 4096;
+    const size_t step = (pixels > target_samples) ? (pixels / target_samples) : 1;
+
+    uint64_t luma_sum = 0;
+    size_t sample_count = 0;
+
+    for (size_t p = 0; p < pixels; p += step) {
+        const size_t idx = p * 3;
+        const int r = rgb[idx + 0];
+        const int g = rgb[idx + 1];
+        const int b = rgb[idx + 2];
+        luma_sum += (uint32_t)((77 * r + 150 * g + 29 * b) >> 8);
+        sample_count++;
+    }
+
+    if (sample_count == 0)
+        return 255;
+
+    return (uint8_t)(luma_sum / sample_count);
+}
+
+
+static void ApplyLowLightBoostRgb888(uint8_t *rgb, size_t bytes, uint8_t mean_luma)
+{
+    if (!rgb || bytes == 0 || mean_luma >= (58U))
+        return;
+
+    const uint32_t darkness_q8 =
+        ((uint32_t)((58U) - mean_luma) << 8) / (58U);
+    const uint32_t gain_q8 = 256U + ((darkness_q8 * (154U)) >> 8);
+    const uint32_t lift = (darkness_q8 * (22U) + 128U) >> 8;
+
+    for (size_t i = 0; i < bytes; ++i) {
+        const int boosted = (int)(((uint32_t)rgb[i] * gain_q8) >> 8) + (int)lift;
+        rgb[i] = ClampU8(boosted);
+    }
+}
+
+
+static float EstimateGlobalMotionRatioRgb565(const uint16_t *curr)
+{
+    if (!curr || !prev_frame_valid)
+        return 0.0f;
+
+    int moving = 0;
+    const int total = 80 * 60;
+
+    for (int y = 0; y < 60; ++y) {
+        for (int x = 0; x < 80; ++x) {
+            const int idx = y * 80 + x;
+            const int src_x = (x * 320) / 80;
+            const int src_y = (y * 240) / 60;
+
+            const uint8_t curr_gray = RGB565ToGray(curr[src_y * 320 + src_x]);
+            const uint8_t prev_gray = prev_frame[idx];
+            const int diff = abs((int)curr_gray - (int)prev_gray);
+
+            if (diff > 18)
+                moving++;
+        }
+    }
+
+    if (total <= 0)
+        return 0.0f;
+
+    return (float)moving / (float)total;
 }
 
 static void DrawDetectBox(
@@ -214593,11 +214706,16 @@ static void DrawDetectBox(
     char szDisplayText[100];
     int best_severity = -1;
     int best_direction = 1;
+    int best_class_id = -1;
     float best_area_ratio = 0.0f;
 
     static int last_printed_severity = -1;
     static int last_printed_direction = -1;
     static uint32_t last_known_print_frame = 0;
+    static int last_spoken_severity = -1;
+    static int last_spoken_direction = -1;
+    static int last_spoken_class_id = -1;
+    static uint32_t last_spoken_frame = 0;
 
  for(int p = 0; p < boxSize; p ++)
  {
@@ -214647,6 +214765,7 @@ static void DrawDetectBox(
         if ((severity > best_severity) || ((severity == best_severity) && (bbox_area_ratio > best_area_ratio))) {
             best_severity = severity;
             best_direction = direction;
+            best_class_id = track.class_id;
             best_area_ratio = bbox_area_ratio;
         }
     }
@@ -214664,6 +214783,23 @@ static void DrawDetectBox(
                 last_printed_severity = best_severity;
                 last_printed_direction = best_direction;
                 last_known_print_frame = g_frame_seq;
+            }
+
+
+
+            const bool voice_state_changed =
+                (best_severity != last_spoken_severity) ||
+                (best_direction != last_spoken_direction) ||
+                (best_class_id != last_spoken_class_id);
+            const uint32_t since_last_voice = g_frame_seq - last_spoken_frame;
+            if (voice_state_changed && (since_last_voice >= (16 * 3) || last_spoken_severity < 0)) {
+                printf("[voice trig] dir=%d cls=%d sev=%d\n", best_direction, best_class_id, best_severity);
+                VoicePlay_StopAll();
+                VoicePlay_Speak(best_direction, best_class_id, best_severity);
+                last_spoken_severity = best_severity;
+                last_spoken_direction = best_direction;
+                last_spoken_class_id = best_class_id;
+                last_spoken_frame = g_frame_seq;
             }
         } else {
             last_printed_severity = -1;
@@ -214706,7 +214842,7 @@ static int32_t PrepareModelToHyperRAM(void)
         printf("ERROR - "); printf("Read Model file size is not enough\n");
   return -2;
  }
-# 410 "../main.cpp"
+# 527 "../main.cpp"
  ModelFileReader_Finish();
 
  return i32FileSize;
@@ -214809,7 +214945,8 @@ int main()
     arm::app::QuantParams inQuantParams = arm::app::GetTensorQuantParams(inputTensor);
 
 
-    arm::app::yolov8n_od::YOLOv8nODPostProcessing postProcess(&model, (0.5));
+    arm::app::yolov8n_od::YOLOv8nODPostProcessing postProcessDay(&model, (0.5));
+    arm::app::yolov8n_od::YOLOv8nODPostProcessing postProcessNight(&model, (0.35f));
 
 
     std::vector<std::string> labels;
@@ -214822,7 +214959,7 @@ int main()
 
     omv_init();
     framebuffer_init_image(&frameBuffer);
-# 534 "../main.cpp"
+# 652 "../main.cpp"
     pmu_reset_counters();
 
 
@@ -214908,8 +215045,13 @@ int main()
 
     BYTETracker tracker(16, 30);
 
+
+    VoicePlay_Init();
+    VoicePlay_SetVolume(-20);
+
  while(1)
  {
+        VoicePlay_Pump();
         emptyFramebuf = get_empty_framebuf();
 
         if (emptyFramebuf)
@@ -214945,9 +215087,16 @@ int main()
 
 
             imlib_nvt_scale(&fullFramebuf->frameImage, &resizeImg, &roi);
-# 666 "../main.cpp"
+# 789 "../main.cpp"
    auto *req_data = static_cast<uint8_t *>(inputTensor->data.data);
    auto *signed_req_data = static_cast<int8_t *>(inputTensor->data.data);
+
+            const uint8_t mean_luma = EstimateMeanLumaRgb888(req_data, inputTensor->bytes);
+            const bool low_light_now = (mean_luma < (58U));
+            fullFramebuf->bLowLight = low_light_now;
+            if (low_light_now) {
+                ApplyLowLightBoostRgb888(req_data, inputTensor->bytes, mean_luma);
+            }
 
    for (size_t i = 0; i < inputTensor->bytes; i++)
    {
@@ -214955,7 +215104,7 @@ int main()
 
     signed_req_data[i] = static_cast<int8_t>(req_data[i]) - 128;
    }
-# 685 "../main.cpp"
+# 815 "../main.cpp"
    model.RunInference();
 
 
@@ -214970,23 +215119,46 @@ int main()
 
         if (infFramebuf)
         {
+            static std::vector<arm::app::yolov8n_od::DetectionResult> s_lastStableDetections;
+            static uint8_t s_shakeHoldStreak = 0;
 
 
 
 
 
-   postProcess.RunPostProcessing(
+
+            auto &postProcess = infFramebuf->bLowLight ? postProcessNight : postProcessDay;
+            postProcess.RunPostProcessing(
     inputImgCols,
     inputImgRows,
     infFramebuf->frameImage.w,
     infFramebuf->frameImage.h,
     infFramebuf->results);
 
+            const uint16_t *currRgb565 = (const uint16_t *)infFramebuf->frameImage.data;
+            const float globalMotionRatio = EstimateGlobalMotionRatioRgb565(currRgb565);
+            const bool isCameraShake = (globalMotionRatio >= 0.22f);
+
+            if (infFramebuf->results.empty()) {
+                if (isCameraShake && !s_lastStableDetections.empty() &&
+                    s_shakeHoldStreak < 2) {
+
+                    infFramebuf->results = s_lastStableDetections;
+                    s_shakeHoldStreak++;
+                } else {
+                    s_lastStableDetections.clear();
+                    s_shakeHoldStreak = 0;
+                }
+            } else {
+                s_lastStableDetections = infFramebuf->results;
+                s_shakeHoldStreak = 0;
+            }
+
             g_frame_seq++;
             g_known_best_severity = -1;
             g_known_best_direction = 1;
             g_known_best_area_ratio = 0.0f;
-# 723 "../main.cpp"
+# 876 "../main.cpp"
    if(infFramebuf->results.size())
    {
 
@@ -215096,11 +215268,13 @@ int main()
                         g_unknown_active[z] = 1;
                         printf("[UNKNOWN OBSTACLE] %s\n", g_zone_names[z]);
                         g_unknown_last_print_frame[z] = g_frame_seq;
+                        VoicePlay_Speak(z, -1, 1);
                     } else if (g_unknown_active[z] && g_unknown_exit_streak[z] >= 4) {
                         g_unknown_active[z] = 0;
                     } else if (g_unknown_active[z] && ((g_frame_seq - g_unknown_last_print_frame[z]) >= 30)) {
                         printf("[UNKNOWN OBSTACLE] %s\n", g_zone_names[z]);
                         g_unknown_last_print_frame[z] = g_frame_seq;
+                        VoicePlay_Speak(z, -1, 1);
                     }
                 }
             }
@@ -215178,7 +215352,7 @@ int main()
 
                 Display_PutText(szUnknownText, strlen(szUnknownText), sSidePanelRect.u32TopLeftX + 4, lineY, textColor, 0xFFFF, false, i32SideTextScale);
             }
-# 967 "../main.cpp"
+# 1122 "../main.cpp"
             u64PerfFrames ++;
    if ((uint64_t) pmu_get_systick_Count() > u64PerfCycle)
             {
@@ -215215,9 +215389,9 @@ int main()
 
   if (emptyFramebuf)
   {
-# 1038 "../main.cpp"
+# 1193 "../main.cpp"
    ImageSensor_WaitCaptureDone();
-# 1060 "../main.cpp"
+# 1215 "../main.cpp"
    emptyFramebuf->eState = eFRAMEBUF_FULL;
   }
 

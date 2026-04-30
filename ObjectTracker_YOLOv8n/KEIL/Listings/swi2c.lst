@@ -25,10 +25,10 @@
 	.eabi_attribute	14, 0	@ Tag_ABI_PCS_R9_use
 	.file	"SWI2C.c"
 	.file	1 "C:\\Users\\antia" "AppData\\Local\\Keil_v5\\ARM\\ARMCLANG\\bin\\..\\include\\stdint.h"
-	.file	2 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../Device/ImageSensor/Sensor\\SWI2C.h"
-	.file	3 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../Device/ImageSensor/Sensor/SWI2C.c"
-	.file	4 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\gpio_reg.h"
-	.file	5 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\ccap_reg.h"
+	.file	2 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../Device/ImageSensor/Sensor\\SWI2C.h"
+	.file	3 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../Device/ImageSensor/Sensor/SWI2C.c"
+	.file	4 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\gpio_reg.h"
+	.file	5 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/Device/Nuvoton/M55M1/Include\\ccap_reg.h"
 	.section	.text._SWI2C_SDA_SETIN,"ax",%progbits
 	.hidden	_SWI2C_SDA_SETIN                @ -- Begin function _SWI2C_SDA_SETIN
 	.globl	_SWI2C_SDA_SETIN
@@ -60,7 +60,7 @@ _SWI2C_SDA_SETIN:
 .Lfunc_end0:
 	.size	_SWI2C_SDA_SETIN, .Lfunc_end0-_SWI2C_SDA_SETIN
 	.cfi_endproc
-	.file	6 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" "../../../../Library/StdDriver/inc\\gpio.h"
+	.file	6 "C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" "../../../../Library/StdDriver/inc\\gpio.h"
 	.cantunwind
 	.fnend
                                         @ -- End function
@@ -14455,209 +14455,209 @@ pfntimedelay:
 .Linfo_string1:
 	.asciz	"../Device/ImageSensor/Sensor\\SWI2C.c" @ string offset=68
 .Linfo_string2:
-	.asciz	"C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n\\KEIL" @ string offset=105
+	.asciz	"C:\\Users\\antia\\TING\\114\\chip\\ML_M55M1_SampleCode\\M55M1BSP-3.01.003\\SampleCode\\NuEdgeWise\\ObjectTracker_YOLOv8n_o\\KEIL" @ string offset=105
 .Linfo_string3:
-	.asciz	"s_sChannel"                    @ string offset=221
+	.asciz	"s_sChannel"                    @ string offset=223
 .Linfo_string4:
-	.asciz	"u32SCKPortIndex"               @ string offset=232
+	.asciz	"u32SCKPortIndex"               @ string offset=234
 .Linfo_string5:
-	.asciz	"unsigned int"                  @ string offset=248
+	.asciz	"unsigned int"                  @ string offset=250
 .Linfo_string6:
-	.asciz	"uint32_t"                      @ string offset=261
+	.asciz	"uint32_t"                      @ string offset=263
 .Linfo_string7:
-	.asciz	"u32SCKPinMask"                 @ string offset=270
+	.asciz	"u32SCKPinMask"                 @ string offset=272
 .Linfo_string8:
-	.asciz	"u32SDAPortIndex"               @ string offset=284
+	.asciz	"u32SDAPortIndex"               @ string offset=286
 .Linfo_string9:
-	.asciz	"u32SDAPinMask"                 @ string offset=300
+	.asciz	"u32SDAPinMask"                 @ string offset=302
 .Linfo_string10:
-	.asciz	"S_I2C_Channel"                 @ string offset=314
+	.asciz	"S_I2C_Channel"                 @ string offset=316
 .Linfo_string11:
-	.asciz	"pfntimedelay"                  @ string offset=328
+	.asciz	"pfntimedelay"                  @ string offset=330
 .Linfo_string12:
-	.asciz	"PFN_SWI2C_TIMEDELY"            @ string offset=341
+	.asciz	"PFN_SWI2C_TIMEDELY"            @ string offset=343
 .Linfo_string13:
-	.asciz	"MODE"                          @ string offset=360
+	.asciz	"MODE"                          @ string offset=362
 .Linfo_string14:
-	.asciz	"DINOFF"                        @ string offset=365
+	.asciz	"DINOFF"                        @ string offset=367
 .Linfo_string15:
-	.asciz	"DOUT"                          @ string offset=372
+	.asciz	"DOUT"                          @ string offset=374
 .Linfo_string16:
-	.asciz	"DATMSK"                        @ string offset=377
+	.asciz	"DATMSK"                        @ string offset=379
 .Linfo_string17:
-	.asciz	"PIN"                           @ string offset=384
+	.asciz	"PIN"                           @ string offset=386
 .Linfo_string18:
-	.asciz	"DBEN"                          @ string offset=388
+	.asciz	"DBEN"                          @ string offset=390
 .Linfo_string19:
-	.asciz	"INTTYPE"                       @ string offset=393
+	.asciz	"INTTYPE"                       @ string offset=395
 .Linfo_string20:
-	.asciz	"INTEN"                         @ string offset=401
+	.asciz	"INTEN"                         @ string offset=403
 .Linfo_string21:
-	.asciz	"INTSRC"                        @ string offset=407
+	.asciz	"INTSRC"                        @ string offset=409
 .Linfo_string22:
-	.asciz	"SMTEN"                         @ string offset=414
+	.asciz	"SMTEN"                         @ string offset=416
 .Linfo_string23:
-	.asciz	"SLEWCTL"                       @ string offset=420
+	.asciz	"SLEWCTL"                       @ string offset=422
 .Linfo_string24:
-	.asciz	"RESERVE0"                      @ string offset=428
+	.asciz	"RESERVE0"                      @ string offset=430
 .Linfo_string25:
-	.asciz	"__ARRAY_SIZE_TYPE__"           @ string offset=437
+	.asciz	"__ARRAY_SIZE_TYPE__"           @ string offset=439
 .Linfo_string26:
-	.asciz	"PUSEL"                         @ string offset=457
+	.asciz	"PUSEL"                         @ string offset=459
 .Linfo_string27:
-	.asciz	"DBCTL"                         @ string offset=463
+	.asciz	"DBCTL"                         @ string offset=465
 .Linfo_string28:
-	.asciz	"GPIO_T"                        @ string offset=469
+	.asciz	"GPIO_T"                        @ string offset=471
 .Linfo_string29:
-	.asciz	"CTL"                           @ string offset=476
+	.asciz	"CTL"                           @ string offset=478
 .Linfo_string30:
-	.asciz	"PAR"                           @ string offset=480
+	.asciz	"PAR"                           @ string offset=482
 .Linfo_string31:
-	.asciz	"INTSTS"                        @ string offset=484
+	.asciz	"INTSTS"                        @ string offset=486
 .Linfo_string32:
-	.asciz	"PARM"                          @ string offset=491
+	.asciz	"PARM"                          @ string offset=493
 .Linfo_string33:
-	.asciz	"CWSP"                          @ string offset=496
+	.asciz	"CWSP"                          @ string offset=498
 .Linfo_string34:
-	.asciz	"CWS"                           @ string offset=501
+	.asciz	"CWS"                           @ string offset=503
 .Linfo_string35:
-	.asciz	"PKTSL"                         @ string offset=505
+	.asciz	"PKTSL"                         @ string offset=507
 .Linfo_string36:
-	.asciz	"PLNSL"                         @ string offset=511
+	.asciz	"PLNSL"                         @ string offset=513
 .Linfo_string37:
-	.asciz	"FRCTL"                         @ string offset=517
+	.asciz	"FRCTL"                         @ string offset=519
 .Linfo_string38:
-	.asciz	"STRIDE"                        @ string offset=523
+	.asciz	"STRIDE"                        @ string offset=525
 .Linfo_string39:
-	.asciz	"RESERVE1"                      @ string offset=530
+	.asciz	"RESERVE1"                      @ string offset=532
 .Linfo_string40:
-	.asciz	"FIFOTH"                        @ string offset=539
+	.asciz	"FIFOTH"                        @ string offset=541
 .Linfo_string41:
-	.asciz	"CMPADDR"                       @ string offset=546
+	.asciz	"CMPADDR"                       @ string offset=548
 .Linfo_string42:
-	.asciz	"LUMA_Y1_THD"                   @ string offset=554
+	.asciz	"LUMA_Y1_THD"                   @ string offset=556
 .Linfo_string43:
-	.asciz	"PKTSM"                         @ string offset=566
+	.asciz	"PKTSM"                         @ string offset=568
 .Linfo_string44:
-	.asciz	"PLNSM"                         @ string offset=572
+	.asciz	"PLNSM"                         @ string offset=574
 .Linfo_string45:
-	.asciz	"CURADDRP"                      @ string offset=578
+	.asciz	"CURADDRP"                      @ string offset=580
 .Linfo_string46:
-	.asciz	"CURADDRY"                      @ string offset=587
+	.asciz	"CURADDRY"                      @ string offset=589
 .Linfo_string47:
-	.asciz	"CURADDRU"                      @ string offset=596
+	.asciz	"CURADDRU"                      @ string offset=598
 .Linfo_string48:
-	.asciz	"CURADDRV"                      @ string offset=605
+	.asciz	"CURADDRV"                      @ string offset=607
 .Linfo_string49:
-	.asciz	"PKTBA0"                        @ string offset=614
+	.asciz	"PKTBA0"                        @ string offset=616
 .Linfo_string50:
-	.asciz	"RESERVE2"                      @ string offset=621
+	.asciz	"RESERVE2"                      @ string offset=623
 .Linfo_string51:
-	.asciz	"YBA"                           @ string offset=630
+	.asciz	"YBA"                           @ string offset=632
 .Linfo_string52:
-	.asciz	"UBA"                           @ string offset=634
+	.asciz	"UBA"                           @ string offset=636
 .Linfo_string53:
-	.asciz	"VBA"                           @ string offset=638
+	.asciz	"VBA"                           @ string offset=640
 .Linfo_string54:
-	.asciz	"RESERVE3"                      @ string offset=642
+	.asciz	"RESERVE3"                      @ string offset=644
 .Linfo_string55:
-	.asciz	"MDCTL"                         @ string offset=651
+	.asciz	"MDCTL"                         @ string offset=653
 .Linfo_string56:
-	.asciz	"MDTRG_WK"                      @ string offset=657
+	.asciz	"MDTRG_WK"                      @ string offset=659
 .Linfo_string57:
-	.asciz	"RESERVE4"                      @ string offset=666
+	.asciz	"RESERVE4"                      @ string offset=668
 .Linfo_string58:
-	.asciz	"MDTTH"                         @ string offset=675
+	.asciz	"MDTTH"                         @ string offset=677
 .Linfo_string59:
-	.asciz	"MDTSAD"                        @ string offset=681
+	.asciz	"MDTSAD"                        @ string offset=683
 .Linfo_string60:
-	.asciz	"RESERVE5"                      @ string offset=688
+	.asciz	"RESERVE5"                      @ string offset=690
 .Linfo_string61:
-	.asciz	"MDWOCTH"                       @ string offset=697
+	.asciz	"MDWOCTH"                       @ string offset=699
 .Linfo_string62:
-	.asciz	"MDWOC"                         @ string offset=705
+	.asciz	"MDWOC"                         @ string offset=707
 .Linfo_string63:
-	.asciz	"RESERVE6"                      @ string offset=711
+	.asciz	"RESERVE6"                      @ string offset=713
 .Linfo_string64:
-	.asciz	"MDWTH"                         @ string offset=720
+	.asciz	"MDWTH"                         @ string offset=722
 .Linfo_string65:
-	.asciz	"MDWSAD"                        @ string offset=726
+	.asciz	"MDWSAD"                        @ string offset=728
 .Linfo_string66:
-	.asciz	"CCAP_T"                        @ string offset=733
+	.asciz	"CCAP_T"                        @ string offset=735
 .Linfo_string67:
-	.asciz	"GPIO_SetMode"                  @ string offset=740
+	.asciz	"GPIO_SetMode"                  @ string offset=742
 .Linfo_string68:
-	.asciz	"_SWI2C_SCK_SETOUT"             @ string offset=753
+	.asciz	"_SWI2C_SCK_SETOUT"             @ string offset=755
 .Linfo_string69:
-	.asciz	"PortIndex"                     @ string offset=771
+	.asciz	"PortIndex"                     @ string offset=773
 .Linfo_string70:
-	.asciz	"PinMask"                       @ string offset=781
+	.asciz	"PinMask"                       @ string offset=783
 .Linfo_string71:
-	.asciz	"_SWI2C_SDA_SETOUT"             @ string offset=789
+	.asciz	"_SWI2C_SDA_SETOUT"             @ string offset=791
 .Linfo_string72:
-	.asciz	"_SWI2C_Delay"                  @ string offset=807
+	.asciz	"_SWI2C_Delay"                  @ string offset=809
 .Linfo_string73:
-	.asciz	"nCount"                        @ string offset=820
+	.asciz	"nCount"                        @ string offset=822
 .Linfo_string74:
-	.asciz	"i"                             @ string offset=827
+	.asciz	"i"                             @ string offset=829
 .Linfo_string75:
-	.asciz	"_SWI2C_SDA_SETIN"              @ string offset=829
+	.asciz	"_SWI2C_SDA_SETIN"              @ string offset=831
 .Linfo_string76:
-	.asciz	"Delay"                         @ string offset=846
+	.asciz	"Delay"                         @ string offset=848
 .Linfo_string77:
-	.asciz	"SWI2C_Open"                    @ string offset=852
+	.asciz	"SWI2C_Open"                    @ string offset=854
 .Linfo_string78:
-	.asciz	"int"                           @ string offset=863
+	.asciz	"int"                           @ string offset=865
 .Linfo_string79:
-	.asciz	"SWI2C_Close"                   @ string offset=867
+	.asciz	"SWI2C_Close"                   @ string offset=869
 .Linfo_string80:
-	.asciz	"SWI2C_SendStart"               @ string offset=879
+	.asciz	"SWI2C_SendStart"               @ string offset=881
 .Linfo_string81:
-	.asciz	"SWI2C_SendStop"                @ string offset=895
+	.asciz	"SWI2C_SendStop"                @ string offset=897
 .Linfo_string82:
-	.asciz	"SWI2C_WriteByte"               @ string offset=910
+	.asciz	"SWI2C_WriteByte"               @ string offset=912
 .Linfo_string83:
-	.asciz	"SWI2C_ReadByte"                @ string offset=926
+	.asciz	"SWI2C_ReadByte"                @ string offset=928
 .Linfo_string84:
-	.asciz	"SWI2C_Slave_ReadByte"          @ string offset=941
+	.asciz	"SWI2C_Slave_ReadByte"          @ string offset=943
 .Linfo_string85:
-	.asciz	"unsigned char"                 @ string offset=962
+	.asciz	"unsigned char"                 @ string offset=964
 .Linfo_string86:
-	.asciz	"uint8_t"                       @ string offset=976
+	.asciz	"uint8_t"                       @ string offset=978
 .Linfo_string87:
-	.asciz	"SWI2C_Write_8bitSlaveAddr_8bitReg_8bitData" @ string offset=984
+	.asciz	"SWI2C_Write_8bitSlaveAddr_8bitReg_8bitData" @ string offset=986
 .Linfo_string88:
-	.asciz	"SWI2C_Read_8bitSlaveAddr_8bitReg_8bitData" @ string offset=1027
+	.asciz	"SWI2C_Read_8bitSlaveAddr_8bitReg_8bitData" @ string offset=1029
 .Linfo_string89:
-	.asciz	"SWI2C_Read_8bitSlaveAddr_16bitReg_8bitData" @ string offset=1069
+	.asciz	"SWI2C_Read_8bitSlaveAddr_16bitReg_8bitData" @ string offset=1071
 .Linfo_string90:
-	.asciz	"SWI2C_Write_8bitSlaveAddr_16bitReg_8bitData" @ string offset=1112
+	.asciz	"SWI2C_Write_8bitSlaveAddr_16bitReg_8bitData" @ string offset=1114
 .Linfo_string91:
-	.asciz	"pfn_SWI2C_Delay"               @ string offset=1156
+	.asciz	"pfn_SWI2C_Delay"               @ string offset=1158
 .Linfo_string92:
-	.asciz	"u8Data"                        @ string offset=1172
+	.asciz	"u8Data"                        @ string offset=1174
 .Linfo_string93:
-	.asciz	"u8AckType"                     @ string offset=1179
+	.asciz	"u8AckType"                     @ string offset=1181
 .Linfo_string94:
-	.asciz	"u8Length"                      @ string offset=1189
+	.asciz	"u8Length"                      @ string offset=1191
 .Linfo_string95:
-	.asciz	"u8DataCount"                   @ string offset=1198
+	.asciz	"u8DataCount"                   @ string offset=1200
 .Linfo_string96:
-	.asciz	"u32HoldPinValue"               @ string offset=1210
+	.asciz	"u32HoldPinValue"               @ string offset=1212
 .Linfo_string97:
-	.asciz	"u32Data"                       @ string offset=1226
+	.asciz	"u32Data"                       @ string offset=1228
 .Linfo_string98:
-	.asciz	"uAddr"                         @ string offset=1234
+	.asciz	"uAddr"                         @ string offset=1236
 .Linfo_string99:
-	.asciz	"uRegAddr"                      @ string offset=1240
+	.asciz	"uRegAddr"                      @ string offset=1242
 .Linfo_string100:
-	.asciz	"uData"                         @ string offset=1249
+	.asciz	"uData"                         @ string offset=1251
 .Linfo_string101:
-	.asciz	"u32Delay"                      @ string offset=1255
+	.asciz	"u32Delay"                      @ string offset=1257
 .Linfo_string102:
-	.asciz	"unsigned short"                @ string offset=1264
+	.asciz	"unsigned short"                @ string offset=1266
 .Linfo_string103:
-	.asciz	"uint16_t"                      @ string offset=1279
+	.asciz	"uint16_t"                      @ string offset=1281
 	.ident	"Component: Arm Compiler for Embedded 6.24 Tool: armclang [5f371800]"
 	.section	".note.GNU-stack","",%progbits
 	.eabi_attribute	30, 1	@ Tag_ABI_optimization_goals

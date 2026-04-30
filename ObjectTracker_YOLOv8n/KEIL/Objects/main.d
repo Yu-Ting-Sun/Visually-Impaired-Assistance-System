@@ -81,7 +81,7 @@
   ..\..\..\..\ThirdParty\tflite_micro\tensorflow\lite\portable_type_to_tflitetype.h \
   ..\..\..\..\ThirdParty\tflite_micro\tensorflow\lite\schema\schema_utils.h \
   ..\YOLOv8nODPostProcessing.hpp ..\DetectionResult.hpp \
-  ..\Model\include\Labels.hpp \
+  ..\Model\include\Labels.hpp ..\VoicePlayer.hpp \
   ..\..\..\..\ThirdParty\openmv\omv\imlib\imlib.h \
   ..\..\..\..\Library\CMSIS\DSP\Include\arm_math.h \
   ..\..\..\..\Library\CMSIS\DSP\Include\arm_math_types.h \

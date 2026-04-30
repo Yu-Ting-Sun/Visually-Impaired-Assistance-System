@@ -474,6 +474,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\Library\StdDriver\src\pdma.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\Library\StdDriver\src\i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2s.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\Library\StdDriver\src\i2s.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -503,6 +513,11 @@
               <FileName>YOLOv8nODPostProcessing.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\YOLOv8nODPostProcessing.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>VoicePlayer.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\VoicePlayer.cpp</FilePath>
             </File>
           </Files>
         </Group>
