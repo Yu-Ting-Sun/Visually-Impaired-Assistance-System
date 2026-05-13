@@ -86,11 +86,27 @@ static const char *labelsVec[] LABELS_ATTRIBUTE =
     "teddy bear",
     "hair drier",
     "toothbrush",
+    /* 80-85 from taiwan_street */
+    "crossing_crosswalk",
+    "curb",
+    "green_sidewalk",
+    "guide_bricks",
+    "sidewalk",
+    "stairs",
+    /* 86-89 from pedestrian_lights */
+    "green",
+    "pedestrian_traffic_light",
+    "red",
+    "signal-light",
+    /* 90-92 from braille_blocks */
+    "braille_blocks",
+    "dots",
+    "lines",
 };
 
 bool GetLabelsVector(std::vector<std::string> &labels)
 {
-    constexpr size_t labelsSz = 80;
+    constexpr size_t labelsSz = 93;
     labels.clear();
 
     if (!labelsSz)
