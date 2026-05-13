@@ -17,13 +17,15 @@ namespace yolov8n_od
 #define YOLOV8N_OD_STRIDE_16	(16)
 #define YOLOV8N_OD_STRIDE_32	(32)
 
-#define YOLOV8N_OD_STRIDE8_CONFIDENCE_TENSOR_INDEX	(2)		//[1, 1024, 80] for YOLOv8n_256
-#define YOLOV8N_OD_STRIDE16_CONFIDENCE_TENSOR_INDEX	(4)		//[1, 256, 80] for YOLOv8n_256
-#define YOLOV8N_OD_STRIDE32_CONFIDENCE_TENSOR_INDEX	(3)		//[1, 64, 80] for YOLOv8n_256
+/* Indices remapped for the v3 fine-tuned model (export_raw_onnx.py + onnx2tf).
+ * Outputs are 4D NHWC: [1, H, W, C]. Per-stride anchor count = H*W. */
+#define YOLOV8N_OD_STRIDE8_CONFIDENCE_TENSOR_INDEX	(1)		//[1, 24, 24, 93]
+#define YOLOV8N_OD_STRIDE16_CONFIDENCE_TENSOR_INDEX	(3)		//[1, 12, 12, 93]
+#define YOLOV8N_OD_STRIDE32_CONFIDENCE_TENSOR_INDEX	(2)		//[1, 6, 6, 93]
 
-#define YOLOV8N_OD_STRIDE8_BOX_TENSOR_INDEX		(0)		//[1, 1024, 64] for YOLOv8n_256
-#define YOLOV8N_OD_STRIDE16_BOX_TENSOR_INDEX	(1)		//[1, 256, 64] for YOLOv8n_256
-#define YOLOV8N_OD_STRIDE32_BOX_TENSOR_INDEX	(5)		//[1, 64, 64] for YOLOv8n_256
+#define YOLOV8N_OD_STRIDE8_BOX_TENSOR_INDEX		(4)		//[1, 24, 24, 64]
+#define YOLOV8N_OD_STRIDE16_BOX_TENSOR_INDEX	(5)		//[1, 12, 12, 64]
+#define YOLOV8N_OD_STRIDE32_BOX_TENSOR_INDEX	(0)		//[1, 6, 6, 64]
 
 	
 /**

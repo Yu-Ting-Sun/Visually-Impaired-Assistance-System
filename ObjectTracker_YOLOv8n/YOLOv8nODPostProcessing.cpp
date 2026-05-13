@@ -74,8 +74,9 @@ void CalBoxXYWH(
     scaleBox = ((TfLiteAffineQuantization *)(psBoxOutputTensor->quantization.params))->scale->data[0];
     zeroPointBox = ((TfLiteAffineQuantization *)(psBoxOutputTensor->quantization.params))->zero_point->data[0];
 
-	anchors = psBoxOutputTensor->dims->data[1];
-	boxDataSize = psBoxOutputTensor->dims->data[2];
+	/* Output tensors are 4D NHWC [1, H, W, C]. anchors = H*W, boxDataSize = C. */
+	anchors = psBoxOutputTensor->dims->data[1] * psBoxOutputTensor->dims->data[2];
+	boxDataSize = psBoxOutputTensor->dims->data[3];
 
 	if(anchors != i32StrideTotalAnchors)
 	{

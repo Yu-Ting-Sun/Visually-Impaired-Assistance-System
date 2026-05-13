@@ -17,14 +17,17 @@
 #define KNOWN_CAUTION_AREA_RATIO_THRESHOLD 0.03f
 #define KNOWN_DANGER_AREA_RATIO_THRESHOLD 0.10f
 
-#define UNKNOWN_MOTION_PIXEL_THRESHOLD 12
-#define UNKNOWN_ZONE_RATIO_THRESHOLD 0.08f
-#define UNKNOWN_ENTER_FRAMES 3
+#define UNKNOWN_MOTION_PIXEL_THRESHOLD 22
+#define UNKNOWN_ZONE_RATIO_THRESHOLD 0.14f
+#define UNKNOWN_ENTER_FRAMES 7
 #define UNKNOWN_EXIT_FRAMES 4
-#define UNKNOWN_REPRINT_INTERVAL_FRAMES 30
+#define UNKNOWN_REPRINT_INTERVAL_FRAMES 60
 #define SHAKE_MOTION_PIXEL_THRESHOLD 18
-#define SHAKE_GLOBAL_MOTION_RATIO_THRESHOLD 0.22f
+#define SHAKE_GLOBAL_MOTION_RATIO_THRESHOLD 0.15f
 #define SHAKE_DETECTION_HOLD_FRAMES 2
+
+/* Debug: print raw unknown/shake metrics every N frames (0 = disabled) */
+#define UNKNOWN_DEBUG_LOG_INTERVAL_FRAMES 15
 
 __attribute__((section(".bss.vram.data"), aligned(32))) static uint8_t prev_frame[FDOWNSAMPLE_W * FDOWNSAMPLE_H];
 static bool prev_frame_valid = false;
@@ -58,7 +61,7 @@ static float g_known_best_area_ratio = 0.0f;
 //#define __PROFILE__
 #define __USE_CCAP__
 #define __USE_DISPLAY__
-//#define __USE_UVC__
+#define __USE_UVC__
 
 #include "Profiler.hpp"
 
@@ -72,7 +75,7 @@ static float g_known_best_area_ratio = 0.0f;
 
 #if defined (__USE_DISPLAY__)
     #include "Display.h"
-#endif
+#endif 
 
 #if defined (__USE_UVC__)
     #include "UVC.h"
@@ -966,6 +969,15 @@ int main()
                 }
 
                 const int threshold = (int)((FDOWNSAMPLE_W * FDOWNSAMPLE_H / ZONE_COUNT) * UNKNOWN_ZONE_RATIO_THRESHOLD);
+
+#if (UNKNOWN_DEBUG_LOG_INTERVAL_FRAMES > 0)
+                if ((g_frame_seq % UNKNOWN_DEBUG_LOG_INTERVAL_FRAMES) == 0) {
+                    printf("[DBG] frame=%lu shake=%.3f(thr=%.2f) diff L=%d C=%d R=%d (thr=%d)\n",
+                           (unsigned long)g_frame_seq,
+                           globalMotionRatio, SHAKE_GLOBAL_MOTION_RATIO_THRESHOLD,
+                           diff_count[0], diff_count[1], diff_count[2], threshold);
+                }
+#endif
 
                 for (int z = 0; z < ZONE_COUNT; z++) {
                     const bool is_over_threshold = (diff_count[z] > threshold);
