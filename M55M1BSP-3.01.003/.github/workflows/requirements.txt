@@ -1,7 +1,0 @@
-cbor
-cbor2
-intelhex
-ecdsa
-cryptography
-click
-cffi
