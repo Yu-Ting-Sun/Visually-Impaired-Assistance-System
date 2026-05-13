@@ -1,0 +1,1322 @@
+/**************************************************************************//**
+ * @file     main.cpp
+ * @version  V1.00
+ * @brief    Object tracker network sample. Demonstrate multi-object tracking.
+ *
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ * @copyright Copyright (C) 2023 Nuvoton Technology Corp. All rights reserved.
+ ******************************************************************************/
+#include <cstdint>
+#include <cstring>
+
+#define FDOWNSAMPLE_W 80
+#define FDOWNSAMPLE_H 60
+#define ZONE_COUNT 3
+
+#define KNOWN_ALERT_PRINT_INTERVAL_FRAMES 10
+#define KNOWN_CAUTION_AREA_RATIO_THRESHOLD 0.03f
+#define KNOWN_DANGER_AREA_RATIO_THRESHOLD 0.10f
+
+#define UNKNOWN_MOTION_PIXEL_THRESHOLD 12
+#define UNKNOWN_ZONE_RATIO_THRESHOLD 0.08f
+#define UNKNOWN_ENTER_FRAMES 3
+#define UNKNOWN_EXIT_FRAMES 4
+#define UNKNOWN_REPRINT_INTERVAL_FRAMES 30
+#define SHAKE_MOTION_PIXEL_THRESHOLD 18
+#define SHAKE_GLOBAL_MOTION_RATIO_THRESHOLD 0.22f
+#define SHAKE_DETECTION_HOLD_FRAMES 2
+
+__attribute__((section(".bss.vram.data"), aligned(32))) static uint8_t prev_frame[FDOWNSAMPLE_W * FDOWNSAMPLE_H];
+static bool prev_frame_valid = false;
+static uint32_t g_frame_seq = 0;
+static const char* g_zone_names[ZONE_COUNT] = {"LEFT", "CENTER", "RIGHT"};
+static const char* g_danger_level_names[3] = {"SAFE", "CAUTION", "DANGER"};
+static uint8_t g_unknown_active[ZONE_COUNT] = {0, 0, 0};
+static uint8_t g_unknown_enter_streak[ZONE_COUNT] = {0, 0, 0};
+static uint8_t g_unknown_exit_streak[ZONE_COUNT] = {0, 0, 0};
+static uint32_t g_unknown_last_print_frame[ZONE_COUNT] = {0, 0, 0};
+static int g_known_best_severity = -1;
+static int g_known_best_direction = 1;
+static float g_known_best_area_ratio = 0.0f;
+
+#include "BoardInit.hpp"      /* Board initialisation */
+
+#include "BufAttributes.hpp" /* Buffer attributes to be applied */
+#include "YOLOv8nODModel.hpp"       /* Model API */
+#include "YOLOv8nODPostProcessing.hpp"
+#include "Labels.hpp"
+#include "VoicePlayer.hpp"
+
+#include "imlib.h"          /* Image processing */
+#include "framebuffer.h"
+#include "ModelFileReader.h"
+#include "ff.h"
+
+#undef PI /* PI macro conflict with CMSIS/DSP */
+#include "NuMicro.h"
+
+//#define __PROFILE__
+#define __USE_CCAP__
+#define __USE_DISPLAY__
+//#define __USE_UVC__
+
+/* Set to 1 for UART bring-up: M55M1 sends fixed test data to ESP32 only. */
+#define UART_LINK_TEST_ONLY 0
+
+#include "Profiler.hpp"
+
+#if defined (__USE_CCAP__)
+#include "ImageSensor.h"
+#endif
+
+#if !defined (__USE_CCAP__)
+#include "InputFiles.hpp"             /* Baked-in input (not needed for live data) */
+#endif
+
+#if defined (__USE_DISPLAY__)
+    #include "Display.h"
+#endif
+
+#if defined (__USE_UVC__)
+    #include "UVC.h"
+#endif
+
+#define IMAGE_REAL_FRAMRATE		16  
+#include "BYTETracker.h"
+
+#include "log_macros.h"      /* Logging macros (optional) */
+
+#define NUM_FRAMEBUF 2  //1 or 2
+
+#define MODEL_AT_HYPERRAM_ADDR (0x82400000)
+
+#define OD_PRESENCE_THRESHOLD  				(0.5)
+#define OD_PRESENCE_THRESHOLD_NIGHT            (0.35f)
+#define LOW_LIGHT_LUMA_THRESHOLD               (58U)
+#define LOW_LIGHT_MAX_GAIN_DELTA_Q8           (154U)  /* max extra gain ~= +0.60 */
+#define LOW_LIGHT_MAX_LIFT                     (22U)  /* max additive lift in 8-bit domain */
+
+typedef enum
+{
+    eFRAMEBUF_EMPTY,
+    eFRAMEBUF_FULL,
+    eFRAMEBUF_INF
+} E_FRAMEBUF_STATE;
+
+typedef struct
+{
+    E_FRAMEBUF_STATE eState;
+    image_t frameImage;
+    std::vector<arm::app::yolov8n_od::DetectionResult> results;
+    bool bLowLight;
+} S_FRAMEBUF;
+
+
+S_FRAMEBUF s_asFramebuf[NUM_FRAMEBUF];
+
+namespace arm
+{
+namespace app
+{
+/* Tensor arena buffer */
+static uint8_t tensorArena[ACTIVATION_BUF_SZ] ACTIVATION_BUF_ATTRIBUTE;
+
+} /* namespace app */
+} /* namespace arm */
+
+//frame buffer managemnet function
+static S_FRAMEBUF *get_empty_framebuf()
+{
+    int i;
+
+    for (i = 0; i < NUM_FRAMEBUF; i ++)
+    {
+        if (s_asFramebuf[i].eState == eFRAMEBUF_EMPTY)
+            return &s_asFramebuf[i];
+    }
+
+    return NULL;
+}
+
+static S_FRAMEBUF *get_full_framebuf()
+{
+    int i;
+
+    for (i = 0; i < NUM_FRAMEBUF; i ++)
+    {
+        if (s_asFramebuf[i].eState == eFRAMEBUF_FULL)
+            return &s_asFramebuf[i];
+    }
+
+    return NULL;
+}
+
+static S_FRAMEBUF *get_inf_framebuf()
+{
+    int i;
+
+    for (i = 0; i < NUM_FRAMEBUF; i ++)
+    {
+        if (s_asFramebuf[i].eState == eFRAMEBUF_INF)
+            return &s_asFramebuf[i];
+    }
+
+    return NULL;
+}
+
+#define IMAGE_DISP_UPSCALE_FACTOR 1
+#if defined(LT7381_LCD_PANEL)
+#define FONT_DISP_UPSCALE_FACTOR 2
+#else
+#define FONT_DISP_UPSCALE_FACTOR 1
+#endif
+
+/* Image processing initiate function */
+//Used by omv library
+#if defined(__USE_UVC__)
+//UVC only support QVGA, QQVGA
+#define GLCD_WIDTH	320
+#define GLCD_HEIGHT	240
+#elif !defined(__USE_CCAP__)
+#define GLCD_WIDTH		IMAGE_WIDTH
+#define GLCD_HEIGHT		IMAGE_HEIGHT
+#else
+#define GLCD_WIDTH		320
+#define GLCD_HEIGHT		240
+#endif
+
+//RGB565
+#define IMAGE_FB_SIZE	(GLCD_WIDTH * GLCD_HEIGHT * 2)
+
+#undef OMV_FB_SIZE
+#define OMV_FB_SIZE (IMAGE_FB_SIZE + 1024)
+
+#undef OMV_FB_ALLOC_SIZE
+#define OMV_FB_ALLOC_SIZE	(1*1024)
+
+__attribute__((section(".bss.vram.data"), aligned(32))) static char fb_array[OMV_FB_SIZE + OMV_FB_ALLOC_SIZE];
+__attribute__((section(".bss.vram.data"), aligned(32))) static char jpeg_array[OMV_JPEG_BUF_SIZE];
+
+#if (NUM_FRAMEBUF == 2)
+    __attribute__((section(".bss.vram.data"), aligned(32))) static char frame_buf1[OMV_FB_SIZE];
+#endif
+
+char *_fb_base = NULL;
+char *_fb_end = NULL;
+char *_jpeg_buf = NULL;
+char *_fballoc = NULL;
+
+static void omv_init()
+{
+    image_t frameBuffer;
+    int i;
+
+    frameBuffer.w = GLCD_WIDTH;
+    frameBuffer.h = GLCD_HEIGHT;
+    frameBuffer.size = GLCD_WIDTH * GLCD_HEIGHT * 2;
+    frameBuffer.pixfmt = PIXFORMAT_RGB565;
+
+    _fb_base = fb_array;
+    _fb_end =  fb_array + OMV_FB_SIZE - 1;
+    _fballoc = _fb_base + OMV_FB_SIZE + OMV_FB_ALLOC_SIZE;
+    _jpeg_buf = jpeg_array;
+
+    fb_alloc_init0();
+
+    framebuffer_init0();
+    framebuffer_init_from_image(&frameBuffer);
+
+    for (i = 0 ; i < NUM_FRAMEBUF; i++)
+    {
+        s_asFramebuf[i].eState = eFRAMEBUF_EMPTY;
+        s_asFramebuf[i].bLowLight = false;
+    }
+
+    framebuffer_init_image(&s_asFramebuf[0].frameImage);
+
+#if (NUM_FRAMEBUF == 2)
+    s_asFramebuf[1].frameImage.w = GLCD_WIDTH;
+    s_asFramebuf[1].frameImage.h = GLCD_HEIGHT;
+    s_asFramebuf[1].frameImage.size = GLCD_WIDTH * GLCD_HEIGHT * 2;
+    s_asFramebuf[1].frameImage.pixfmt = PIXFORMAT_RGB565;
+    s_asFramebuf[1].frameImage.data = (uint8_t *)frame_buf1;
+#endif
+}
+
+static inline uint8_t RGB565ToGray(uint16_t pixel)
+{
+    const int r5 = (pixel >> 11) & 0x1F;
+    const int g6 = (pixel >> 5) & 0x3F;
+    const int b5 = pixel & 0x1F;
+
+    const int r8 = (r5 << 3) | (r5 >> 2);
+    const int g8 = (g6 << 2) | (g6 >> 4);
+    const int b8 = (b5 << 3) | (b5 >> 2);
+
+    return (uint8_t)((77 * r8 + 150 * g8 + 29 * b8) >> 8);
+}
+
+static inline int GetDirectionIndex(float bbox_center_x, float img_w)
+{
+    if (bbox_center_x < img_w * 0.33f)
+        return 0;
+    if (bbox_center_x < img_w * 0.66f)
+        return 1;
+    return 2;
+}
+
+static inline int GetDangerSeverity(float bbox_area_ratio)
+{
+    if (bbox_area_ratio > KNOWN_DANGER_AREA_RATIO_THRESHOLD)
+        return 2; // DANGER
+    if (bbox_area_ratio > KNOWN_CAUTION_AREA_RATIO_THRESHOLD)
+        return 1; // CAUTION
+    return 0;     // SAFE
+}
+
+static inline uint8_t ClampU8(int value)
+{
+    if (value < 0) return 0;
+    if (value > 255) return 255;
+    return (uint8_t)value;
+}
+
+/* Fast luma estimate from RGB888 input tensor buffer. */
+static uint8_t EstimateMeanLumaRgb888(const uint8_t *rgb, size_t bytes)
+{
+    if (!rgb || bytes < 3)
+        return 255;
+
+    const size_t pixels = bytes / 3;
+    const size_t target_samples = 4096;
+    const size_t step = (pixels > target_samples) ? (pixels / target_samples) : 1;
+
+    uint64_t luma_sum = 0;
+    size_t sample_count = 0;
+
+    for (size_t p = 0; p < pixels; p += step) {
+        const size_t idx = p * 3;
+        const int r = rgb[idx + 0];
+        const int g = rgb[idx + 1];
+        const int b = rgb[idx + 2];
+        luma_sum += (uint32_t)((77 * r + 150 * g + 29 * b) >> 8);
+        sample_count++;
+    }
+
+    if (sample_count == 0)
+        return 255;
+
+    return (uint8_t)(luma_sum / sample_count);
+}
+
+/* Apply night-only brightness compensation. Daytime path stays untouched. */
+static void ApplyLowLightBoostRgb888(uint8_t *rgb, size_t bytes, uint8_t mean_luma)
+{
+    if (!rgb || bytes == 0 || mean_luma >= LOW_LIGHT_LUMA_THRESHOLD)
+        return;
+
+    const uint32_t darkness_q8 =
+        ((uint32_t)(LOW_LIGHT_LUMA_THRESHOLD - mean_luma) << 8) / LOW_LIGHT_LUMA_THRESHOLD;
+    const uint32_t gain_q8 = 256U + ((darkness_q8 * LOW_LIGHT_MAX_GAIN_DELTA_Q8) >> 8);
+    const uint32_t lift = (darkness_q8 * LOW_LIGHT_MAX_LIFT + 128U) >> 8;
+
+    for (size_t i = 0; i < bytes; ++i) {
+        const int boosted = (int)(((uint32_t)rgb[i] * gain_q8) >> 8) + (int)lift;
+        rgb[i] = ClampU8(boosted);
+    }
+}
+
+/* Estimate global frame motion ratio using low-resolution gray map for shake detection. */
+static float EstimateGlobalMotionRatioRgb565(const uint16_t *curr)
+{
+    if (!curr || !prev_frame_valid)
+        return 0.0f;
+
+    int moving = 0;
+    const int total = FDOWNSAMPLE_W * FDOWNSAMPLE_H;
+
+    for (int y = 0; y < FDOWNSAMPLE_H; ++y) {
+        for (int x = 0; x < FDOWNSAMPLE_W; ++x) {
+            const int idx = y * FDOWNSAMPLE_W + x;
+            const int src_x = (x * GLCD_WIDTH) / FDOWNSAMPLE_W;
+            const int src_y = (y * GLCD_HEIGHT) / FDOWNSAMPLE_H;
+
+            const uint8_t curr_gray = RGB565ToGray(curr[src_y * GLCD_WIDTH + src_x]);
+            const uint8_t prev_gray = prev_frame[idx];
+            const int diff = abs((int)curr_gray - (int)prev_gray);
+
+            if (diff > SHAKE_MOTION_PIXEL_THRESHOLD)
+                moving++;
+        }
+    }
+
+    if (total <= 0)
+        return 0.0f;
+
+    return (float)moving / (float)total;
+}
+
+static void DrawDetectBox(
+    const std::vector<arm::app::yolov8n_od::DetectionResult> &results,
+    image_t *drawImg,
+    std::vector<std::string> &labels,
+	BYTETracker *tracker
+)
+{
+	arm::app::yolov8n_od::DetectionResult detectBox;
+	int boxSize = results.size();
+    std::vector<struct Object> detObjects;
+    char szDisplayText[100];
+    int best_severity = -1;
+    int best_direction = 1;
+    int best_class_id = -1;
+    float best_area_ratio = 0.0f;
+
+    static int last_printed_severity = -1;
+    static int last_printed_direction = -1;
+    static uint32_t last_known_print_frame = 0;
+    static int last_spoken_severity = -1;
+    static int last_spoken_direction = -1;
+    static int last_spoken_class_id = -1;
+    static uint32_t last_spoken_frame = 0;
+
+	for(int p = 0; p < boxSize; p ++)
+	{
+		struct Object detObject;
+
+		detectBox = results[p];
+		detObject.rect.x = detectBox.m_detectBox.x;
+		detObject.rect.y = detectBox.m_detectBox.y;
+		detObject.rect.w = detectBox.m_detectBox.w;
+		detObject.rect.h = detectBox.m_detectBox.h;
+
+		detObject.label = detectBox.m_detectBox.cls;
+		detObject.prob = detectBox.m_detectBox.normalisedVal;
+
+		detObjects.push_back(detObject);
+	}
+	
+	
+	vector<STrack> output_stracks = tracker->update(detObjects);
+	
+	for(int t = 0; t < output_stracks.size(); t ++)
+	{
+		STrack track = output_stracks[t];
+		vector<float> tlwh = track.tlwh;
+		int colorIdx = track.track_id + 3;
+		int trackColor = COLOR_R8_G8_B8_TO_RGB565(37 * colorIdx % 255, 17 * colorIdx % 255, 29 * colorIdx % 255);		
+		
+		sprintf(szDisplayText, "%d: %s", track.track_id, labels[track.class_id].c_str());		
+		imlib_draw_rectangle(drawImg, (int)tlwh[0], (int)tlwh[1], (int)tlwh[2], (int)tlwh[3], trackColor, 2, false);
+        imlib_draw_string(drawImg, (int)tlwh[0], (int)tlwh[1] - 16, szDisplayText, trackColor, 2, 0, 0, false,
+                          false, false, false, 0, false, false);	
+
+        // ===== EdgeEye 警告邏輯（每幀只保留最危險事件） =====
+        float img_w = (float)drawImg->w;   // 320
+        float img_h = (float)drawImg->h;   // 240
+
+        // 計算 BBox 佔畫面比例（估距離）
+        float bbox_area_ratio = (tlwh[2] * tlwh[3]) / (img_w * img_h);
+
+        // 判斷左中右
+        float bbox_center_x = tlwh[0] + tlwh[2] / 2.0f;
+        const int direction = GetDirectionIndex(bbox_center_x, img_w);
+
+        // 判斷距離
+        const int severity = GetDangerSeverity(bbox_area_ratio);
+
+        if ((severity > best_severity) || ((severity == best_severity) && (bbox_area_ratio > best_area_ratio))) {
+            best_severity = severity;
+            best_direction = direction;
+            best_class_id = track.class_id;
+            best_area_ratio = bbox_area_ratio;
+        }
+    }
+
+    if (best_severity >= 0) {
+        g_known_best_severity = best_severity;
+        g_known_best_direction = best_direction;
+        g_known_best_area_ratio = best_area_ratio;
+
+        // SAFE 不輸出，避免大量洗版；只輸出 CAUTION/DANGER，且加節流與狀態變化觸發。
+        if (best_severity >= 1) {
+            const bool changed = (best_severity != last_printed_severity) || (best_direction != last_printed_direction);
+            if (changed || ((g_frame_seq - last_known_print_frame) >= KNOWN_ALERT_PRINT_INTERVAL_FRAMES)) {
+                printf("[%s] %s (area=%.2f)\n", g_zone_names[best_direction], g_danger_level_names[best_severity], best_area_ratio);
+                last_printed_severity = best_severity;
+                last_printed_direction = best_direction;
+                last_known_print_frame = g_frame_seq;
+            }
+
+            // 語音警示：狀態 (方向/類別/嚴重度) 變化才播，且與上次語音間隔 >= 冷卻 frames。
+            #define VOICE_COOLDOWN_FRAMES (IMAGE_REAL_FRAMRATE * 3)
+            const bool voice_state_changed =
+                (best_severity  != last_spoken_severity) ||
+                (best_direction != last_spoken_direction) ||
+                (best_class_id  != last_spoken_class_id);
+            const uint32_t since_last_voice = g_frame_seq - last_spoken_frame;
+            if (voice_state_changed && (since_last_voice >= VOICE_COOLDOWN_FRAMES || last_spoken_severity < 0)) {
+                printf("[voice trig] dir=%d cls=%d sev=%d\n", best_direction, best_class_id, best_severity);
+                VoicePlay_StopAll();
+                VoicePlay_Speak(best_direction, best_class_id, best_severity);
+                
+                /* ===== Send warning to ESP32 via UART ===== */
+                VoiceWarning_t warn;
+                warn.direction = (uint8_t)best_direction;
+                warn.class_id = (uint8_t)best_class_id;
+                warn.severity = (uint8_t)best_severity;
+                VoicePlay_SendWarning(&warn);
+                
+                last_spoken_severity  = best_severity;
+                last_spoken_direction = best_direction;
+                last_spoken_class_id  = best_class_id;
+                last_spoken_frame     = g_frame_seq;
+            }
+        } else {
+            last_printed_severity = -1;
+            last_printed_direction = -1;
+        }
+    }
+}
+
+static int32_t PrepareModelToHyperRAM(void)
+{
+#define MODEL_FILE "0:\\YOLOv8n-od.tflite"
+#define EACH_READ_SIZE 512
+	
+    TCHAR sd_path[] = { '0', ':', 0 };    /* SD drive started from 0 */	
+    f_chdrive(sd_path);          /* set default path */
+
+	int32_t i32FileSize;
+	int32_t i32FileReadIndex = 0;
+	int32_t i32Read;
+	
+	if(!ModelFileReader_Initialize(MODEL_FILE))
+	{
+        printf_err("Unable open model %s\n", MODEL_FILE);		
+		return -1;
+	}
+	
+	i32FileSize = ModelFileReader_FileSize();
+    info("Model file size %i \n", i32FileSize);
+
+	while(i32FileReadIndex < i32FileSize)
+	{
+		i32Read = ModelFileReader_ReadData((BYTE *)(MODEL_AT_HYPERRAM_ADDR + i32FileReadIndex), EACH_READ_SIZE);
+		if(i32Read < 0)
+			break;
+		i32FileReadIndex += i32Read;
+	}
+	
+	if(i32FileReadIndex < i32FileSize)
+	{
+        printf_err("Read Model file size is not enough\n");		
+		return -2;
+	}
+	
+#if 0
+	/* verify */
+	i32FileReadIndex = 0;
+	ModelFileReader_Rewind();
+	BYTE au8TempBuf[EACH_READ_SIZE];
+	
+	while(i32FileReadIndex < i32FileSize)
+	{
+		i32Read = ModelFileReader_ReadData((BYTE *)au8TempBuf, EACH_READ_SIZE);
+		if(i32Read < 0)
+			break;
+		
+		if(std::memcmp(au8TempBuf, (void *)(MODEL_AT_HYPERRAM_ADDR + i32FileReadIndex), i32Read)!= 0)
+		{
+			printf_err("verify the model file content is incorrect at %i \n", i32FileReadIndex);		
+			return -3;
+		}
+		i32FileReadIndex += i32Read;
+	}
+	
+#endif	
+	ModelFileReader_Finish();
+	
+	return i32FileSize;
+}	
+
+#if UART_LINK_TEST_ONLY
+static void RunUartLinkTestOnly(void)
+{
+    static const uint8_t kAsciiProbe[] = "M551M1_UART_TEST\r\n";
+    static const VoiceWarning_t kWarnings[] = {
+        {0, 0x01, 2},    /* LEFT, known class 1, DANGER */
+        {1, 0x02, 1},    /* CENTER, known class 2, CAUTION */
+        {2, 0x03, 2},    /* RIGHT, known class 3, DANGER */
+        {1, 0xFF, 1},    /* CENTER, unknown obstacle, CAUTION */
+    };
+    uint32_t index = 0;
+    uint32_t tx_count = 0;
+    char line[64];
+
+    VoicePlay_UART_Init();
+#if defined (__USE_DISPLAY__)
+    Display_Init();
+    Display_ClearLCD(C_WHITE);
+    Display_PutText("UART TX TEST", 12, 8, 8, C_BLUE, C_WHITE, false, 2);
+    Display_PutText("M55M1 D1/PB3 -> ESP32 GPIO26", 31, 8, 48, C_BLACK, C_WHITE, false, 1);
+    Display_PutText("M55M1 D0/PB2 <- ESP32 GPIO25", 31, 8, 68, C_BLACK, C_WHITE, false, 1);
+#endif
+    printf("[UART TEST] UART1 PB3(D1/TX) -> ESP32 GPIO26(RX), PB2(D0/RX) <- ESP32 GPIO25(TX)\n");
+    printf("[UART TEST] Sending ASCII probe and one protocol packet every 2 seconds.\n");
+
+    while (1) {
+        const VoiceWarning_t *warn = &kWarnings[index];
+        const uint8_t packet[6] = {
+            0xAA,
+            (uint8_t)(warn->direction & 0x03),
+            warn->class_id,
+            (uint8_t)(warn->severity & 0x03),
+            (uint8_t)((warn->direction & 0x03) ^ warn->class_id ^ (warn->severity & 0x03)),
+            0x55,
+        };
+
+        VoicePlay_UART_SendBytes(kAsciiProbe, sizeof(kAsciiProbe) - 1);
+        VoicePlay_SendWarning(warn);
+        tx_count++;
+
+#if defined (__USE_DISPLAY__)
+        S_DISP_RECT clearRect;
+        clearRect.u32TopLeftX = 0;
+        clearRect.u32TopLeftY = 96;
+        clearRect.u32BottonRightX = Disaplay_GetLCDWidth() - 1;
+        clearRect.u32BottonRightY = Disaplay_GetLCDHeight() - 1;
+        Display_ClearRect(C_WHITE, &clearRect);
+
+        sprintf(line, "TX count: %lu", (unsigned long)tx_count);
+        Display_PutText(line, strlen(line), 8, 104, C_RED, C_WHITE, false, 2);
+
+        sprintf(line, "ASCII: M551M1_UART_TEST");
+        Display_PutText(line, strlen(line), 8, 144, C_BLACK, C_WHITE, false, 1);
+
+        sprintf(line, "PKT: %02X %02X %02X %02X %02X %02X",
+                packet[0], packet[1], packet[2], packet[3], packet[4], packet[5]);
+        Display_PutText(line, strlen(line), 8, 164, C_BLACK, C_WHITE, false, 1);
+#endif
+
+        index = (index + 1) % (sizeof(kWarnings) / sizeof(kWarnings[0]));
+        CLK_SysTickDelay(2000000);
+    }
+}
+#endif
+
+int main()
+{
+    /* Initialise the UART module to allow printf related functions (if using retarget) */
+    BoardInit();
+
+#if UART_LINK_TEST_ONLY
+    RunUartLinkTestOnly();
+#endif
+
+	/* Copy model file from SD to HyperRAM*/
+	int32_t i32ModelSize;
+		
+	i32ModelSize = PrepareModelToHyperRAM();
+
+	if(i32ModelSize <= 0 )
+	{
+        printf_err("Failed to prepare model\n");
+        return 1;
+	}
+
+    /* Model object creation and initialisation. */
+    arm::app::YOLOv8nODModel model;
+
+    if (!model.Init(arm::app::tensorArena,
+                    sizeof(arm::app::tensorArena),
+                    (unsigned char *)MODEL_AT_HYPERRAM_ADDR,
+                    i32ModelSize))
+    {
+        printf_err("Failed to initialise model\n");
+        return 1;
+    }
+
+    /* Setup cache poicy of tensor arean buffer */
+    info("Set tesnor arena cache policy to WTRA \n");
+    const std::vector<ARM_MPU_Region_t> mpuConfig =
+    {
+        {
+            // SRAM for tensor arena
+            ARM_MPU_RBAR(((unsigned int)arm::app::tensorArena),        // Base
+                         ARM_MPU_SH_NON,    // Non-shareable
+                         0,                 // Read-only
+                         1,                 // Non-Privileged
+                         1),                // eXecute Never enabled
+            ARM_MPU_RLAR((((unsigned int)arm::app::tensorArena) + ACTIVATION_BUF_SZ - 1),        // Limit
+                         eMPU_ATTR_CACHEABLE_WTRA) // Attribute index - Write-Through, Read-allocate
+        },
+        {
+            // Image data from CCAP DMA, so must set frame buffer to Non-cache attribute
+            ARM_MPU_RBAR(((unsigned int)fb_array),        // Base
+                         ARM_MPU_SH_NON,    // Non-shareable
+                         0,                 // Read-only
+                         1,                 // Non-Privileged
+                         1),                // eXecute Never enabled
+            ARM_MPU_RLAR((((unsigned int)fb_array) + OMV_FB_SIZE - 1),        // Limit
+                         eMPU_ATTR_NON_CACHEABLE) // NonCache
+        },
+#if (NUM_FRAMEBUF == 2)
+        {
+            // Image data from CCAP DMA, so must set frame buffer to Non-cache attribute
+            ARM_MPU_RBAR(((unsigned int)frame_buf1),        // Base
+                         ARM_MPU_SH_NON,    // Non-shareable
+                         0,                 // Read-only
+                         1,                 // Non-Privileged
+                         1),                // eXecute Never enabled
+            ARM_MPU_RLAR((((unsigned int)frame_buf1) + OMV_FB_SIZE - 1),        // Limit
+                         eMPU_ATTR_NON_CACHEABLE) // NonCache
+        },
+#endif
+    };
+
+    // Setup MPU configuration
+    InitPreDefMPURegion(&mpuConfig[0], mpuConfig.size());
+
+#if !defined (__USE_CCAP__)
+    uint8_t u8ImgIdx = 0;
+    char chStdIn;
+#endif
+
+    TfLiteTensor *inputTensor   = model.GetInputTensor(0);
+
+    if (!inputTensor->dims)
+    {
+        printf_err("Invalid input tensor dims\n");
+        return 2;
+    }
+    else if (inputTensor->dims->size < 3)
+    {
+        printf_err("Input tensor dimension should be >= 3\n");
+        return 3;
+    }
+
+    TfLiteIntArray *inputShape = model.GetInputShape(0);
+
+    const int inputImgCols = inputShape->data[arm::app::YOLOv8nODModel::ms_inputColsIdx];
+    const int inputImgRows = inputShape->data[arm::app::YOLOv8nODModel::ms_inputRowsIdx];
+    const uint32_t nChannels = inputShape->data[arm::app::YOLOv8nODModel::ms_inputChannelsIdx];
+
+    /* Get input quantization params information. */
+    arm::app::QuantParams inQuantParams = arm::app::GetTensorQuantParams(inputTensor);
+	
+    // postProcess
+    arm::app::yolov8n_od::YOLOv8nODPostProcessing postProcessDay(&model, OD_PRESENCE_THRESHOLD);
+    arm::app::yolov8n_od::YOLOv8nODPostProcessing postProcessNight(&model, OD_PRESENCE_THRESHOLD_NIGHT);
+
+    //label information
+    std::vector<std::string> labels;
+    GetLabelsVector(labels);
+	
+    //display framebuffer
+    image_t frameBuffer;
+    rectangle_t roi;
+
+    //omv library init
+    omv_init();
+    framebuffer_init_image(&frameBuffer);
+
+#if defined(__PROFILE__)
+
+    arm::app::Profiler profiler;
+    uint64_t u64StartCycle;
+    uint64_t u64EndCycle;
+    uint64_t u64CCAPStartCycle;
+    uint64_t u64CCAPEndCycle;
+#else
+    pmu_reset_counters();
+#endif
+
+#define EACH_PERF_SEC 5
+    uint64_t u64PerfCycle;
+    uint64_t u64PerfFrames = 0;
+
+    u64PerfCycle = pmu_get_systick_Count();
+    u64PerfCycle += (SystemCoreClock * EACH_PERF_SEC);
+
+    S_FRAMEBUF *infFramebuf;
+    S_FRAMEBUF *fullFramebuf;
+    S_FRAMEBUF *emptyFramebuf;
+
+#if defined (__USE_CCAP__)
+    //Setup image senosr
+    ImageSensor_Init();
+    ImageSensor_Config(eIMAGE_FMT_RGB565, frameBuffer.w, frameBuffer.h, true);
+#endif
+
+#if defined (__USE_DISPLAY__)
+    char szDisplayText[100];
+    char szSidePanelText[64];
+    char szUnknownText[64];
+    S_DISP_RECT sDispRect;
+    S_DISP_RECT sSidePanelRect;
+    uint32_t u32LcdWidth;
+    uint32_t u32LcdHeight;
+    uint32_t u32RenderedImgWidth;
+    uint32_t u32RenderedImgHeight;
+    uint32_t u32SidePanelWidth = 0;
+    uint32_t u32SidePanelHeight = 0;
+    int i32SideTextScale = 1;
+    uint32_t u32SideLineStep = FONT_HTIGHT;
+    bool bEnableSidePanel = false;
+
+    Display_Init();
+    Display_ClearLCD(C_WHITE);
+
+    u32LcdWidth = Disaplay_GetLCDWidth();
+    u32LcdHeight = Disaplay_GetLCDHeight();
+    u32RenderedImgWidth = frameBuffer.w * IMAGE_DISP_UPSCALE_FACTOR;
+    u32RenderedImgHeight = frameBuffer.h * IMAGE_DISP_UPSCALE_FACTOR;
+
+    if (u32LcdWidth > (u32RenderedImgWidth + (FONT_WIDTH * 8)))
+    {
+        const int desiredScale = 8;
+        const int longestTextChars = 19; // "U:LEFT/CENTER/RIGHT"
+        const int panelLines = 3;        // STATUS, known, unknown
+        int maxScaleByWidth;
+        int maxScaleByHeight;
+        int fitScale;
+
+        bEnableSidePanel = true;
+        u32SidePanelWidth = u32LcdWidth - u32RenderedImgWidth;
+        u32SidePanelHeight = u32LcdHeight;
+
+        maxScaleByWidth = (int)((u32SidePanelWidth > 8 ? (u32SidePanelWidth - 8) : u32SidePanelWidth) / (FONT_WIDTH * longestTextChars));
+        maxScaleByHeight = (int)((u32SidePanelHeight > 8 ? (u32SidePanelHeight - 8) : u32SidePanelHeight) / (FONT_HTIGHT * panelLines));
+        fitScale = maxScaleByWidth;
+        if (maxScaleByHeight < fitScale)
+            fitScale = maxScaleByHeight;
+        if (fitScale < 1)
+            fitScale = 1;
+        if (fitScale > desiredScale)
+            fitScale = desiredScale;
+
+        i32SideTextScale = fitScale;
+        u32SideLineStep = FONT_HTIGHT * i32SideTextScale;
+
+        sSidePanelRect.u32TopLeftX = u32RenderedImgWidth;
+        sSidePanelRect.u32TopLeftY = 0;
+        sSidePanelRect.u32BottonRightX = u32LcdWidth - 1;
+        sSidePanelRect.u32BottonRightY = u32LcdHeight - 1;
+        Display_ClearRect(C_WHITE, &sSidePanelRect);
+    }
+#endif
+
+#if defined (__USE_UVC__)
+	UVC_Init();
+    HSUSBD_Start();
+#endif
+
+    BYTETracker tracker(IMAGE_REAL_FRAMRATE, 30);
+
+    /* Init voice warning player (I2S + NAU8822 -> 3.5mm jack). SD already mounted. */
+    VoicePlay_Init();
+    VoicePlay_SetVolume(-20);  /* safe listening; range -57..+6 dB */
+    
+    /* Init UART for Bluetooth warning bridge to ESP32 */
+    VoicePlay_UART_Init();  /* UART1: PB3(D1/TX), PB2(D0/RX) at 115200 baud */
+
+	while(1)
+	{
+        VoicePlay_Pump();
+        emptyFramebuf = get_empty_framebuf();
+
+        if (emptyFramebuf)
+        {
+#if defined (__USE_CCAP__)
+            //capture frame from CCAP
+#if defined(__PROFILE__)
+            u64CCAPStartCycle = pmu_get_systick_Count();
+#endif
+
+            ImageSensor_TriggerCapture((uint32_t)(emptyFramebuf->frameImage.data));
+#endif
+		}
+
+        fullFramebuf = get_full_framebuf();
+
+        if (fullFramebuf)
+        {
+            //resize full image to input tensor
+            image_t resizeImg;
+
+            roi.x = 0;
+            roi.y = 0;
+            roi.w = fullFramebuf->frameImage.w;
+            roi.h = fullFramebuf->frameImage.h;
+
+            resizeImg.w = inputImgCols;
+            resizeImg.h = inputImgRows;
+            resizeImg.data = (uint8_t *)inputTensor->data.data; //direct resize to input tensor buffer
+            resizeImg.pixfmt = PIXFORMAT_RGB888;
+
+#if defined(__PROFILE__)
+            u64StartCycle = pmu_get_systick_Count();
+#endif
+            imlib_nvt_scale(&fullFramebuf->frameImage, &resizeImg, &roi);
+
+#if defined(__PROFILE__)
+            u64EndCycle = pmu_get_systick_Count();
+            info("resize cycles %llu \n", (u64EndCycle - u64StartCycle));
+#endif
+
+#if defined(__PROFILE__)
+            u64StartCycle = pmu_get_systick_Count();
+#endif
+			//Quantize input tensor data
+			auto *req_data = static_cast<uint8_t *>(inputTensor->data.data);
+			auto *signed_req_data = static_cast<int8_t *>(inputTensor->data.data);
+
+            const uint8_t mean_luma = EstimateMeanLumaRgb888(req_data, inputTensor->bytes);
+            const bool low_light_now = (mean_luma < LOW_LIGHT_LUMA_THRESHOLD);
+            fullFramebuf->bLowLight = low_light_now;
+            if (low_light_now) {
+                ApplyLowLightBoostRgb888(req_data, inputTensor->bytes, mean_luma);
+            }
+
+			for (size_t i = 0; i < inputTensor->bytes; i++)
+			{
+//				auto i_data_int8 = static_cast<int8_t>(((static_cast<float>(req_data[i]) / 255.0f) / inQuantParams.scale) + inQuantParams.offset);
+//				signed_req_data[i] = std::min<int8_t>(INT8_MAX, std::max<int8_t>(i_data_int8, INT8_MIN));
+				signed_req_data[i] = static_cast<int8_t>(req_data[i]) - 128;
+			}
+
+#if defined(__PROFILE__)
+            u64EndCycle = pmu_get_systick_Count();
+            info("quantize cycles %llu \n", (u64EndCycle - u64StartCycle));
+#endif
+
+#if defined(__PROFILE__)
+			profiler.StartProfiling("Inference");
+#endif
+
+			model.RunInference();
+
+#if defined(__PROFILE__)
+			profiler.StopProfiling();
+			profiler.PrintProfilingResult();
+#endif
+
+            fullFramebuf->eState = eFRAMEBUF_INF;
+        }
+		
+        infFramebuf = get_inf_framebuf();
+
+        if (infFramebuf)
+        {
+            static std::vector<arm::app::yolov8n_od::DetectionResult> s_lastStableDetections;
+            static uint8_t s_shakeHoldStreak = 0;
+
+			//post process
+
+#if defined(__PROFILE__)
+			u64StartCycle = pmu_get_systick_Count();
+#endif
+            auto &postProcess = infFramebuf->bLowLight ? postProcessNight : postProcessDay;
+            postProcess.RunPostProcessing(
+				inputImgCols,
+				inputImgRows,
+				infFramebuf->frameImage.w,
+				infFramebuf->frameImage.h,
+				infFramebuf->results);
+
+            const uint16_t *currRgb565 = (const uint16_t *)infFramebuf->frameImage.data;
+            const float globalMotionRatio = EstimateGlobalMotionRatioRgb565(currRgb565);
+            const bool isCameraShake = (globalMotionRatio >= SHAKE_GLOBAL_MOTION_RATIO_THRESHOLD);
+
+            if (infFramebuf->results.empty()) {
+                if (isCameraShake && !s_lastStableDetections.empty() &&
+                    s_shakeHoldStreak < SHAKE_DETECTION_HOLD_FRAMES) {
+                    /* Keep boxes briefly during shaking frames to avoid one-frame dropouts. */
+                    infFramebuf->results = s_lastStableDetections;
+                    s_shakeHoldStreak++;
+                } else {
+                    s_lastStableDetections.clear();
+                    s_shakeHoldStreak = 0;
+                }
+            } else {
+                s_lastStableDetections = infFramebuf->results;
+                s_shakeHoldStreak = 0;
+            }
+
+            g_frame_seq++;
+            g_known_best_severity = -1;
+            g_known_best_direction = 1;
+            g_known_best_area_ratio = 0.0f;
+
+#if defined(__PROFILE__)
+			u64EndCycle = pmu_get_systick_Count();
+			info("post processing cycles %llu \n", (u64EndCycle - u64StartCycle));
+#endif
+
+            //draw bbox and render
+            /* Draw boxes. */
+			if(infFramebuf->results.size())
+			{
+#if defined(__PROFILE__)
+				u64StartCycle = pmu_get_systick_Count();
+#endif
+
+				DrawDetectBox(infFramebuf->results, &infFramebuf->frameImage, labels, &tracker);
+
+#if defined(__PROFILE__)
+				u64EndCycle = pmu_get_systick_Count();
+				info("draw box cycles %llu \n", (u64EndCycle - u64StartCycle));
+#endif
+			}
+
+            //display result image
+#if defined (__USE_DISPLAY__)
+            //Display image on LCD
+            sDispRect.u32TopLeftX = 0;
+            sDispRect.u32TopLeftY = 0;
+			sDispRect.u32BottonRightX = ((frameBuffer.w * IMAGE_DISP_UPSCALE_FACTOR) - 1);
+			sDispRect.u32BottonRightY = ((frameBuffer.h * IMAGE_DISP_UPSCALE_FACTOR) - 1);
+
+#if defined(__PROFILE__)
+            u64StartCycle = pmu_get_systick_Count();
+#endif
+            // ===== Frame Difference 幀差法（低解析度版）=====
+            if (prev_frame_valid) {
+                uint16_t *curr = (uint16_t *)infFramebuf->frameImage.data;
+                int diff_count[ZONE_COUNT] = {0, 0, 0};
+                const int zone_w = FDOWNSAMPLE_W / ZONE_COUNT;
+
+                // 將「已知物件」先投影到低解析度遮罩，避免 known 物件觸發 unknown 警示。
+                uint8_t known_mask[FDOWNSAMPLE_W * FDOWNSAMPLE_H];
+                std::memset(known_mask, 0, sizeof(known_mask));
+
+                for (size_t r = 0; r < infFramebuf->results.size(); r++) {
+                    const arm::app::yolov8n_od::DetectionResult &det = infFramebuf->results[r];
+
+                    int bx0 = (int)det.m_detectBox.x;
+                    int by0 = (int)det.m_detectBox.y;
+                    int bx1 = bx0 + (int)det.m_detectBox.w - 1;
+                    int by1 = by0 + (int)det.m_detectBox.h - 1;
+
+                    if (bx1 < 0 || by1 < 0 || bx0 >= GLCD_WIDTH || by0 >= GLCD_HEIGHT)
+                        continue;
+
+                    if (bx0 < 0) bx0 = 0;
+                    if (by0 < 0) by0 = 0;
+                    if (bx1 >= GLCD_WIDTH) bx1 = GLCD_WIDTH - 1;
+                    if (by1 >= GLCD_HEIGHT) by1 = GLCD_HEIGHT - 1;
+
+                    int lx0 = (bx0 * FDOWNSAMPLE_W) / GLCD_WIDTH;
+                    int ly0 = (by0 * FDOWNSAMPLE_H) / GLCD_HEIGHT;
+                    int lx1 = (bx1 * FDOWNSAMPLE_W) / GLCD_WIDTH;
+                    int ly1 = (by1 * FDOWNSAMPLE_H) / GLCD_HEIGHT;
+
+                    if (lx0 < 0) lx0 = 0;
+                    if (ly0 < 0) ly0 = 0;
+                    if (lx1 >= FDOWNSAMPLE_W) lx1 = FDOWNSAMPLE_W - 1;
+                    if (ly1 >= FDOWNSAMPLE_H) ly1 = FDOWNSAMPLE_H - 1;
+
+                    for (int y = ly0; y <= ly1; y++) {
+                        for (int x = lx0; x <= lx1; x++) {
+                            known_mask[y * FDOWNSAMPLE_W + x] = 1;
+                        }
+                    }
+                }
+
+                for (int y = 0; y < FDOWNSAMPLE_H; y++) {
+                    for (int x = 0; x < FDOWNSAMPLE_W; x++) {
+                        const int mask_idx = y * FDOWNSAMPLE_W + x;
+
+                        if (known_mask[mask_idx]) {
+                            continue;
+                        }
+
+                        const int src_x = (x * GLCD_WIDTH) / FDOWNSAMPLE_W;
+                        const int src_y = (y * GLCD_HEIGHT) / FDOWNSAMPLE_H;
+
+                        const uint16_t curr_px = curr[src_y * GLCD_WIDTH + src_x];
+                        const uint8_t curr_gray = RGB565ToGray(curr_px);
+                        const uint8_t prev_gray = prev_frame[mask_idx];
+                        const int diff = abs((int)curr_gray - (int)prev_gray);
+
+                        if (diff > UNKNOWN_MOTION_PIXEL_THRESHOLD) {
+                            int zone = x / zone_w;
+                            if (zone >= ZONE_COUNT) zone = ZONE_COUNT - 1;
+                            diff_count[zone]++;
+                        }
+                    }
+                }
+
+                const int threshold = (int)((FDOWNSAMPLE_W * FDOWNSAMPLE_H / ZONE_COUNT) * UNKNOWN_ZONE_RATIO_THRESHOLD);
+
+                for (int z = 0; z < ZONE_COUNT; z++) {
+                    const bool is_over_threshold = (diff_count[z] > threshold);
+
+                    if (is_over_threshold) {
+                        if (g_unknown_enter_streak[z] < 255) g_unknown_enter_streak[z]++;
+                        g_unknown_exit_streak[z] = 0;
+                    } else {
+                        g_unknown_enter_streak[z] = 0;
+                        if (g_unknown_exit_streak[z] < 255) g_unknown_exit_streak[z]++;
+                    }
+
+                    if (!g_unknown_active[z] && g_unknown_enter_streak[z] >= UNKNOWN_ENTER_FRAMES) {
+                        g_unknown_active[z] = 1;
+                        printf("[UNKNOWN OBSTACLE] %s\n", g_zone_names[z]);
+                        g_unknown_last_print_frame[z] = g_frame_seq;
+                        VoicePlay_Speak(z, -1, 1);
+                        
+                        /* ===== Send unknown obstacle warning to ESP32 via UART ===== */
+                        VoiceWarning_t warn;
+                        warn.direction = (uint8_t)z;
+                        warn.class_id = 0xFF;  /* 0xFF = unknown obstacle */
+                        warn.severity = 1;     /* CAUTION level */
+                        VoicePlay_SendWarning(&warn);
+                        
+                    } else if (g_unknown_active[z] && g_unknown_exit_streak[z] >= UNKNOWN_EXIT_FRAMES) {
+                        g_unknown_active[z] = 0;
+                    } else if (g_unknown_active[z] && ((g_frame_seq - g_unknown_last_print_frame[z]) >= UNKNOWN_REPRINT_INTERVAL_FRAMES)) {
+                        printf("[UNKNOWN OBSTACLE] %s\n", g_zone_names[z]);
+                        g_unknown_last_print_frame[z] = g_frame_seq;
+                        VoicePlay_Speak(z, -1, 1);
+                        
+                        /* ===== Send unknown obstacle warning to ESP32 via UART (re-alert) ===== */
+                        VoiceWarning_t warn;
+                        warn.direction = (uint8_t)z;
+                        warn.class_id = 0xFF;  /* 0xFF = unknown obstacle */
+                        warn.severity = 1;     /* CAUTION level */
+                        VoicePlay_SendWarning(&warn);
+                    }
+                }
+            }
+
+            // 儲存縮圖
+            uint16_t *curr = (uint16_t *)infFramebuf->frameImage.data;
+            for (int y = 0; y < FDOWNSAMPLE_H; y++) {
+                for (int x = 0; x < FDOWNSAMPLE_W; x++) {
+                    const int src_x = (x * GLCD_WIDTH) / FDOWNSAMPLE_W;
+                    const int src_y = (y * GLCD_HEIGHT) / FDOWNSAMPLE_H;
+                    prev_frame[y * FDOWNSAMPLE_W + x] = RGB565ToGray(curr[src_y * GLCD_WIDTH + src_x]);
+                }
+            }
+            prev_frame_valid = true;
+            // ===== END Frame Difference =====         
+
+            Display_FillRect((uint16_t *)infFramebuf->frameImage.data, &sDispRect, IMAGE_DISP_UPSCALE_FACTOR);
+
+            if (bEnableSidePanel)
+            {
+                uint32_t lineY = 4;
+                uint32_t textColor = C_BLACK;
+                bool firstUnknown = true;
+
+                Display_ClearRect(C_WHITE, &sSidePanelRect);
+
+                Display_PutText("STATUS", 6, sSidePanelRect.u32TopLeftX + 4, lineY, C_BLUE, C_WHITE, false, i32SideTextScale);
+                lineY += u32SideLineStep;
+
+                if (g_known_best_severity >= 0)
+                {
+                    sprintf(szSidePanelText, "K:%s %s", g_zone_names[g_known_best_direction], g_danger_level_names[g_known_best_severity]);
+
+                    if (g_known_best_severity == 2)
+                        textColor = C_RED;
+                    else if (g_known_best_severity == 1)
+                        textColor = C_YELLOW;
+                    else
+                        textColor = C_GREEN;
+                }
+                else
+                {
+                    sprintf(szSidePanelText, "K:NONE");
+                    textColor = C_BLACK;
+                }
+
+                Display_PutText(szSidePanelText, strlen(szSidePanelText), sSidePanelRect.u32TopLeftX + 4, lineY, textColor, C_WHITE, false, i32SideTextScale);
+                lineY += u32SideLineStep;
+
+                std::memset(szUnknownText, 0, sizeof(szUnknownText));
+                strcpy(szUnknownText, "U:");
+
+                for (int z = 0; z < ZONE_COUNT; z++)
+                {
+                    if (g_unknown_active[z])
+                    {
+                        if (!firstUnknown)
+                        {
+                            strcat(szUnknownText, "/");
+                        }
+                        strcat(szUnknownText, g_zone_names[z]);
+                        firstUnknown = false;
+                    }
+                }
+
+                if (firstUnknown)
+                {
+                    strcat(szUnknownText, "NONE");
+                    textColor = C_GREEN;
+                }
+                else
+                {
+                    textColor = C_RED;
+                }
+
+                Display_PutText(szUnknownText, strlen(szUnknownText), sSidePanelRect.u32TopLeftX + 4, lineY, textColor, C_WHITE, false, i32SideTextScale);
+            }
+
+#if defined(__PROFILE__)
+            u64EndCycle = pmu_get_systick_Count();
+            info("display image cycles %llu \n", (u64EndCycle - u64StartCycle));
+#endif
+
+#endif
+
+#if defined (__USE_UVC__)
+			if(UVC_IsConnect())
+			{
+#if (UVC_Color_Format == UVC_Format_YUY2)
+				image_t RGB565Img;
+				image_t YUV422Img;
+
+				RGB565Img.w = infFramebuf->frameImage.w;
+				RGB565Img.h = infFramebuf->frameImage.h;
+				RGB565Img.data = (uint8_t *)infFramebuf->frameImage.data;
+				RGB565Img.pixfmt = PIXFORMAT_RGB565;
+
+				YUV422Img.w = RGB565Img.w;
+				YUV422Img.h = RGB565Img.h;
+				YUV422Img.data = (uint8_t *)infFramebuf->frameImage.data;
+				YUV422Img.pixfmt = PIXFORMAT_YUV422;
+				
+				roi.x = 0;
+				roi.y = 0;
+				roi.w = RGB565Img.w;
+				roi.h = RGB565Img.h;
+				imlib_nvt_scale(&RGB565Img, &YUV422Img, &roi);
+				
+#else
+				image_t origImg;
+				image_t vflipImg;
+
+				origImg.w = infFramebuf->frameImage.w;
+				origImg.h = infFramebuf->frameImage.h;
+				origImg.data = (uint8_t *)infFramebuf->frameImage.data;
+				origImg.pixfmt = PIXFORMAT_RGB565;
+
+				vflipImg.w = origImg.w;
+				vflipImg.h = origImg.h;
+				vflipImg.data = (uint8_t *)infFramebuf->frameImage.data;
+				vflipImg.pixfmt = PIXFORMAT_RGB565;
+
+				imlib_nvt_vflip(&origImg, &vflipImg);
+#endif
+				UVC_SendImage((uint32_t)infFramebuf->frameImage.data, IMAGE_FB_SIZE, uvcStatus.StillImage);				
+
+			}
+
+#endif
+
+            u64PerfFrames ++;
+			if ((uint64_t) pmu_get_systick_Count() > u64PerfCycle)
+            {
+                info("Total inference rate: %llu\n", u64PerfFrames / EACH_PERF_SEC);
+#if defined (__USE_DISPLAY__)
+                sprintf(szDisplayText, "Frame Rate %llu", u64PerfFrames / EACH_PERF_SEC);
+                //sprintf(szDisplayText,"Time %llu",(uint64_t) pmu_get_systick_Count() / (uint64_t)SystemCoreClock);
+                //info("Running %s sec \n", szDisplayText);
+
+                sDispRect.u32TopLeftX = 0;
+				sDispRect.u32TopLeftY = frameBuffer.h * IMAGE_DISP_UPSCALE_FACTOR;
+				sDispRect.u32BottonRightX = (frameBuffer.w);
+				sDispRect.u32BottonRightY = ((frameBuffer.h * IMAGE_DISP_UPSCALE_FACTOR) + (FONT_DISP_UPSCALE_FACTOR * FONT_HTIGHT) - 1);
+
+                Display_ClearRect(C_WHITE, &sDispRect);
+                Display_PutText(
+                    szDisplayText,
+                    strlen(szDisplayText),
+                    0,
+                    frameBuffer.h,
+                    C_BLUE,
+                    C_WHITE,
+                    false,
+					FONT_DISP_UPSCALE_FACTOR
+                );
+#endif
+                u64PerfCycle = (uint64_t)pmu_get_systick_Count() + (uint64_t)(SystemCoreClock * EACH_PERF_SEC);
+                u64PerfFrames = 0;
+			}
+
+            infFramebuf->eState = eFRAMEBUF_EMPTY;
+		}
+		
+		//Wait CCAP ready
+		if (emptyFramebuf)
+		{
+#if !defined (__USE_CCAP__)
+            info("Press 'n' to run next image inference \n");
+            info("Press 'q' to exit program \n");
+
+            while ((chStdIn = getchar()))
+            {
+                if (chStdIn == 'q')
+                {
+                    return 0;
+                }
+                else if (chStdIn != 'n')
+                {
+                    break;
+                }
+            }
+
+            const uint8_t *pu8ImgSrc = get_img_array(u8ImgIdx);
+
+            if (nullptr == pu8ImgSrc)
+            {
+                printf_err("Failed to get image index %" PRIu32 " (max: %u)\n", u8ImgIdx,
+                           NUMBER_OF_FILES - 1);
+                return -1;
+            }
+
+            u8ImgIdx ++;
+
+            if (u8ImgIdx >= NUMBER_OF_FILES)
+                u8ImgIdx = 0;
+
+#endif
+
+#if defined (__USE_CCAP__)
+			//Capture new image
+
+			ImageSensor_WaitCaptureDone();
+#if defined(__PROFILE__)
+			u64CCAPEndCycle = pmu_get_systick_Count();
+			info("ccap capture cycles %llu \n", (u64CCAPEndCycle - u64CCAPStartCycle));
+#endif
+#else
+            //copy source image to frame buffer
+            image_t srcImg;
+
+            srcImg.w = IMAGE_WIDTH;
+            srcImg.h = IMAGE_HEIGHT;
+            srcImg.data = (uint8_t *)pu8ImgSrc;
+            srcImg.pixfmt = PIXFORMAT_RGB888;
+
+            roi.x = 0;
+            roi.y = 0;
+            roi.w = IMAGE_WIDTH;
+            roi.h = IMAGE_HEIGHT;
+
+            imlib_nvt_scale(&srcImg, &emptyFramebuf->frameImage, &roi);
+
+#endif
+			emptyFramebuf->eState = eFRAMEBUF_FULL;		
+		}
+
+	}
+	
+    return 0;
+}
+
+
+
