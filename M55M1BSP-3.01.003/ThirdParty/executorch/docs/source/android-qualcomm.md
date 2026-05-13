@@ -1,1 +1,0 @@
-```{include} backends-qualcomm.md

@@ -1,1 +1,0 @@
-# Samsung Exynos Backend (TBD)
