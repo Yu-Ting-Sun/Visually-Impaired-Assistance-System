@@ -14,14 +14,15 @@
 #define ZONE_COUNT 3
 
 #define KNOWN_ALERT_PRINT_INTERVAL_FRAMES 10
-#define KNOWN_CAUTION_AREA_RATIO_THRESHOLD 0.03f
+#define KNOWN_CAUTION_AREA_RATIO_THRESHOLD 0.04f
 #define KNOWN_DANGER_AREA_RATIO_THRESHOLD 0.10f
 
-#define UNKNOWN_MOTION_PIXEL_THRESHOLD 12
-#define UNKNOWN_ZONE_RATIO_THRESHOLD 0.08f
-#define UNKNOWN_ENTER_FRAMES 3
-#define UNKNOWN_EXIT_FRAMES 4
+#define UNKNOWN_MOTION_PIXEL_THRESHOLD 20
+#define UNKNOWN_ZONE_RATIO_THRESHOLD 0.15f
+#define UNKNOWN_ENTER_FRAMES 8
+#define UNKNOWN_EXIT_FRAMES 6
 #define UNKNOWN_REPRINT_INTERVAL_FRAMES 30
+#define VOICE_COOLDOWN_FRAMES (IMAGE_REAL_FRAMRATE * 5)
 #define SHAKE_MOTION_PIXEL_THRESHOLD 18
 #define SHAKE_GLOBAL_MOTION_RATIO_THRESHOLD 0.22f
 #define SHAKE_DETECTION_HOLD_FRAMES 2
@@ -375,7 +376,7 @@ static void DrawDetectBox(
     static int last_printed_severity = -1;
     static int last_printed_direction = -1;
     static uint32_t last_known_print_frame = 0;
-    static int last_spoken_severity = -1;
+    static int last_spoken_severity = -2;  // -2=從未播過, -1=SAFE後重置, >=0=上次嚴重度
     static int last_spoken_direction = -1;
     static int last_spoken_class_id = -1;
     static uint32_t last_spoken_frame = 0;
@@ -449,13 +450,12 @@ static void DrawDetectBox(
             }
 
             // 語音警示：狀態 (方向/類別/嚴重度) 變化才播，且與上次語音間隔 >= 冷卻 frames。
-            #define VOICE_COOLDOWN_FRAMES (IMAGE_REAL_FRAMRATE * 3)
             const bool voice_state_changed =
                 (best_severity  != last_spoken_severity) ||
                 (best_direction != last_spoken_direction) ||
                 (best_class_id  != last_spoken_class_id);
             const uint32_t since_last_voice = g_frame_seq - last_spoken_frame;
-            if (voice_state_changed && (since_last_voice >= VOICE_COOLDOWN_FRAMES || last_spoken_severity < 0)) {
+            if (voice_state_changed && (since_last_voice >= VOICE_COOLDOWN_FRAMES || last_spoken_severity == -2)) {
                 printf("[voice trig] dir=%d cls=%d sev=%d\n", best_direction, best_class_id, best_severity);
                 VoicePlay_StopAll();
                 VoicePlay_Speak(best_direction, best_class_id, best_severity);
@@ -475,6 +475,10 @@ static void DrawDetectBox(
         } else {
             last_printed_severity = -1;
             last_printed_direction = -1;
+            // 物件消失或回 SAFE 時重置語音狀態，讓物件重新出現後冷卻結束能再播
+            last_spoken_severity  = -1;
+            last_spoken_direction = -1;
+            last_spoken_class_id  = -1;
         }
     }
 }
@@ -1101,7 +1105,25 @@ int main()
                 }
             }
             prev_frame_valid = true;
-            // ===== END Frame Difference =====         
+            // ===== END Frame Difference =====
+
+            // 畫出未知障礙物偵測區域（橙色邊框）
+            {
+                const int uz_w = GLCD_WIDTH / ZONE_COUNT;
+                const int color_unknown = COLOR_R8_G8_B8_TO_RGB565(255, 165, 0);
+                const int color_entering = COLOR_R8_G8_B8_TO_RGB565(255, 255, 0);
+                for (int z = 0; z < ZONE_COUNT; z++) {
+                    if (g_unknown_active[z]) {
+                        imlib_draw_rectangle(&infFramebuf->frameImage,
+                                             z * uz_w, 0, uz_w, GLCD_HEIGHT,
+                                             color_unknown, 3, false);
+                    } else if (g_unknown_enter_streak[z] > 0) {
+                        imlib_draw_rectangle(&infFramebuf->frameImage,
+                                             z * uz_w, 0, uz_w, GLCD_HEIGHT,
+                                             color_entering, 1, false);
+                    }
+                }
+            }
 
             Display_FillRect((uint16_t *)infFramebuf->frameImage.data, &sDispRect, IMAGE_DISP_UPSCALE_FACTOR);
 
